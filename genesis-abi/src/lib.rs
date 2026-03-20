@@ -51,6 +51,16 @@ impl GenResult {
     pub const ERR_MODULE_NOT_FOUND: Self = Self(-66);
     pub const ERR_MODULE_INCOMPATIBLE: Self = Self(-67);
 
+    // RT errors (-80 to -95) — GenesisOS-RT
+    pub const ERR_DEADLINE_MISS: Self = Self(-80);
+    pub const ERR_PRIORITY_INV: Self = Self(-81);
+    pub const ERR_STACK_OVERFLOW: Self = Self(-82);
+
+    // Syscall errors (-96 to -111) — TerranoxOS, HermeticaOS
+    pub const ERR_BAD_SYSCALL: Self = Self(-96);
+    pub const ERR_BAD_HANDLE: Self = Self(-97);
+    pub const ERR_SYSCALL_INTERRUPTED: Self = Self(-98);
+
     #[inline]
     pub const fn is_ok(self) -> bool {
         self.0 == 0
@@ -89,6 +99,12 @@ impl GenResult {
             -65 => "MODULE_INIT_FAILED",
             -66 => "MODULE_NOT_FOUND",
             -67 => "MODULE_INCOMPATIBLE",
+            -80 => "DEADLINE_MISS",
+            -81 => "PRIORITY_INV",
+            -82 => "STACK_OVERFLOW",
+            -96 => "BAD_SYSCALL",
+            -97 => "BAD_HANDLE",
+            -98 => "SYSCALL_INTERRUPTED",
             _ => "UNKNOWN",
         }
     }
@@ -360,6 +376,12 @@ mod tests {
             GenResult::ERR_MODULE_INIT_FAILED,
             GenResult::ERR_MODULE_NOT_FOUND,
             GenResult::ERR_MODULE_INCOMPATIBLE,
+            GenResult::ERR_DEADLINE_MISS,
+            GenResult::ERR_PRIORITY_INV,
+            GenResult::ERR_STACK_OVERFLOW,
+            GenResult::ERR_BAD_SYSCALL,
+            GenResult::ERR_BAD_HANDLE,
+            GenResult::ERR_SYSCALL_INTERRUPTED,
         ];
         for e in errors {
             assert!(e.is_error(), "Expected error for code {}", e.0);
@@ -394,6 +416,12 @@ mod tests {
             GenResult::ERR_MODULE_INIT_FAILED.0,
             GenResult::ERR_MODULE_NOT_FOUND.0,
             GenResult::ERR_MODULE_INCOMPATIBLE.0,
+            GenResult::ERR_DEADLINE_MISS.0,
+            GenResult::ERR_PRIORITY_INV.0,
+            GenResult::ERR_STACK_OVERFLOW.0,
+            GenResult::ERR_BAD_SYSCALL.0,
+            GenResult::ERR_BAD_HANDLE.0,
+            GenResult::ERR_SYSCALL_INTERRUPTED.0,
         ];
         for (i, &a) in codes.iter().enumerate() {
             for &b in &codes[i + 1..] {

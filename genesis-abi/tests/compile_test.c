@@ -20,6 +20,8 @@ _Static_assert(GEN_ERR_PERMISSION_DENIED == -16, "GEN_ERR_PERMISSION_DENIED must
 _Static_assert(GEN_ERR_IO == -32, "GEN_ERR_IO must be -32");
 _Static_assert(GEN_ERR_INVALID_FORMAT == -48, "GEN_ERR_INVALID_FORMAT must be -48");
 _Static_assert(GEN_ERR_MODULE_LOAD_FAILED == -64, "GEN_ERR_MODULE_LOAD_FAILED must be -64");
+_Static_assert(GEN_ERR_DEADLINE_MISS == -80, "GEN_ERR_DEADLINE_MISS must be -80");
+_Static_assert(GEN_ERR_BAD_SYSCALL == -96, "GEN_ERR_BAD_SYSCALL must be -96");
 
 /* Syscall range checks */
 _Static_assert(GEN_SYSCALL_SHARED_BASE == 0x0000, "Shared base");

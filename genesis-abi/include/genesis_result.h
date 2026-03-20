@@ -68,6 +68,20 @@ typedef int32_t GenResult;
 #define GEN_ERR_MODULE_NOT_FOUND    ((GenResult)-66)
 #define GEN_ERR_MODULE_INCOMPATIBLE ((GenResult)-67)
 
+/* ── RT errors (-80 to -95) — GenesisOS-RT ───────────────── */
+
+#define GEN_ERR_DEADLINE_MISS  ((GenResult)-80)
+#define GEN_ERR_PRIORITY_INV   ((GenResult)-81)
+#define GEN_ERR_STACK_OVERFLOW ((GenResult)-82)
+/* -83 to -95 reserved for future RT errors */
+
+/* ── Syscall errors (-96 to -111) — TerranoxOS, HermeticaOS  */
+
+#define GEN_ERR_BAD_SYSCALL          ((GenResult)-96)
+#define GEN_ERR_BAD_HANDLE           ((GenResult)-97)
+#define GEN_ERR_SYSCALL_INTERRUPTED  ((GenResult)-98)
+/* -99 to -111 reserved for future syscall errors */
+
 /* ── Convenience helpers ─────────────────────────────────── */
 
 static inline int gen_result_is_ok(GenResult r)    { return r == GEN_OK; }
@@ -100,6 +114,12 @@ static inline const char *gen_result_name(GenResult r)
     case GEN_ERR_MODULE_INIT_FAILED:  return "MODULE_INIT_FAILED";
     case GEN_ERR_MODULE_NOT_FOUND:    return "MODULE_NOT_FOUND";
     case GEN_ERR_MODULE_INCOMPATIBLE: return "MODULE_INCOMPATIBLE";
+    case GEN_ERR_DEADLINE_MISS:       return "DEADLINE_MISS";
+    case GEN_ERR_PRIORITY_INV:        return "PRIORITY_INV";
+    case GEN_ERR_STACK_OVERFLOW:      return "STACK_OVERFLOW";
+    case GEN_ERR_BAD_SYSCALL:         return "BAD_SYSCALL";
+    case GEN_ERR_BAD_HANDLE:          return "BAD_HANDLE";
+    case GEN_ERR_SYSCALL_INTERRUPTED: return "SYSCALL_INTERRUPTED";
     default:                          return "UNKNOWN";
     }
 }
