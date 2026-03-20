@@ -90,7 +90,25 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 - Crypto tests use FIPS 180-4, RFC 4231, IEEE 802.3 standard test vectors
 - `#[cfg(test)] extern crate alloc` pattern used in no_std crates that need `Vec` in tests
 
+## CI Pipeline (`.github/workflows/ci.yml`)
+
+Six jobs run on push/PR to `main`:
+
+| Job | What it checks |
+|-----|---------------|
+| `rust-tests` | `cargo build` + `cargo test --workspace` + feature-gated tests |
+| `rust-miri` | Miri on all crates with unsafe (sync, alloc, collections, crypto, elf, devicetree) |
+| `rust-clippy` | `cargo clippy -- -D warnings` |
+| `rust-fmt` | `cargo fmt --check` |
+| `c-build-test` | GCC compile all C sources with `-Werror -Wpedantic -ffreestanding`, run all C test binaries |
+| `abi-drift-check` | Verify error code counts, syscall counts, and struct sizes match between C headers and Rust mirror |
+
+Frama-C verification is not yet in CI (requires `frama-c` package). Run locally:
+```bash
+frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
+```
+
 ## Deferred
 
-- CI pipeline (Frama-C verification, Miri, drift check between C headers and Rust mirror)
 - Bazel `rules_rust` integration
+- Frama-C in CI (needs solver packages)
