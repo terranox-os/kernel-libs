@@ -4,6 +4,7 @@ members = [
     "genesis-abi",
     "bitops",
     "kfmt",
+    "sync",
 ]
 
 [workspace.package]

@@ -1,0 +1,10 @@
+[package]
+name = "kernel-sync"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding synchronization primitives: SpinLock, Once, atomic bitops"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

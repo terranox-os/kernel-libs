@@ -1,0 +1,4 @@
+# sync is Rust-only (no_std). Bazel build via rules_rust when added.
+# For now, build and test with Cargo:
+#   cargo build -p kernel-sync
+#   cargo test -p kernel-sync
