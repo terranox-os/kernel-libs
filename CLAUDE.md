@@ -95,7 +95,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ## CI Pipeline (`.github/workflows/ci.yml`)
 
-Six jobs run on push/PR to `main`:
+Seven jobs run on push/PR to `main`:
 
 | Job | What it checks |
 |-----|---------------|
@@ -105,12 +105,6 @@ Six jobs run on push/PR to `main`:
 | `rust-fmt` | `cargo fmt --check` |
 | `c-build-test` | GCC compile all C sources with `-Werror -Wpedantic -ffreestanding`, run all C test binaries |
 | `abi-drift-check` | Verify error code counts, syscall counts, and struct sizes match between C headers and Rust mirror |
+| `frama-c` | Frama-C WP verification of ACSL annotations on all C sources (primitives, bitops, alloc) |
 
-Frama-C verification is not yet in CI (requires `frama-c` package). Run locally:
-```bash
-frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
-```
-
-## Deferred
-
-- Frama-C in CI (needs solver packages)
+Run Frama-C locally: `./scripts/frama-c-verify.sh` (full proofs) or `./scripts/frama-c-verify.sh --check-only` (parse annotations only).

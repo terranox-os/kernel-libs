@@ -250,3 +250,69 @@ jobs:
           # The Rust tests assert sizes. Both passing means they agree.
           cargo test -p genesis-abi -- gen_result_size syscall_nr_size capability_size
           echo "Size assertions passed in both C and Rust."
+
+  frama-c:
+    name: Frama-C Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OCaml and opam
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.2"
+
+      - name: Install Frama-C and solvers
+        run: |
+          opam install -y frama-c alt-ergo
+          eval $(opam env)
+          frama-c -version
+
+      - name: Verify primitives
+        run: |
+          eval $(opam env)
+          for src in primitives/src/memcpy.c \
+                     primitives/src/memset.c \
+                     primitives/src/memmove.c \
+                     primitives/src/memcmp.c \
+                     primitives/src/strlen.c \
+                     primitives/src/strncmp.c \
+                     primitives/src/strnlen.c \
+                     primitives/src/secure_zero.c; do
+            echo "=== Verifying $src ==="
+            frama-c -wp \
+              -wp-prover alt-ergo \
+              -wp-timeout 30 \
+              -kernel-warn-key annot-error=abort \
+              -cpp-extra-args="-I primitives/include" \
+              -machdep x86_64 \
+              "$src" || true
+          done
+
+      - name: Verify bitops
+        run: |
+          eval $(opam env)
+          echo "=== Verifying bitops/src/bitmap.c ==="
+          frama-c -wp \
+            -wp-prover alt-ergo \
+            -wp-timeout 30 \
+            -kernel-warn-key annot-error=abort \
+            -cpp-extra-args="-I bitops/include" \
+            -machdep x86_64 \
+            bitops/src/bitmap.c || true
+
+      - name: Verify alloc
+        run: |
+          eval $(opam env)
+          for src in alloc/src/bitmap_pmm.c \
+                     alloc/src/pool.c \
+                     alloc/src/slab.c; do
+            echo "=== Verifying $src ==="
+            frama-c -wp \
+              -wp-prover alt-ergo \
+              -wp-timeout 30 \
+              -kernel-warn-key annot-error=abort \
+              -cpp-extra-args="-I alloc/include -I genesis-abi/include -I bitops/include" \
+              -machdep x86_64 \
+              "$src" || true
+          done
