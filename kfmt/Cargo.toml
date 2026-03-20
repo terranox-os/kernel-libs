@@ -1,0 +1,10 @@
+[package]
+name = "kernel-kfmt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding kernel formatter via core::fmt::Write"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

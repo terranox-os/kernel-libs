@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gen_kfmt",
+    srcs = ["src/kprintf.c"],
+    hdrs = ["include/gen_kfmt.h"],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+    deps = ["//genesis-abi:genesis_abi"],
+)
+
+cc_test(
+    name = "kprintf_test",
+    srcs = ["tests/kprintf_test.c"],
+    deps = [":gen_kfmt"],
+    copts = [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+)

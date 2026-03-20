@@ -12,3 +12,10 @@ version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
+
+[[package]]
+name = "kernel-kfmt"
+version = "0.1.0"
+dependencies = [
+ "genesis-abi",
+]
