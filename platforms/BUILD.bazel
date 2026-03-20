@@ -1,0 +1,42 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# ── Cross-compilation platform definitions ───────────────────
+#
+# Usage:
+#   bazel build //... --platforms=//platforms:aarch64_none
+#   bazel build //... --platforms=//platforms:thumbv7em_none
+#   bazel build //... --platforms=//platforms:riscv64_none
+
+platform(
+    name = "aarch64_none",
+    constraint_values = [
+        "@platforms//os:none",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+platform(
+    name = "thumbv7em_none",
+    constraint_values = [
+        "@platforms//os:none",
+        "@platforms//cpu:armv7e-m",
+    ],
+)
+
+platform(
+    name = "riscv64_none",
+    constraint_values = [
+        "@platforms//os:none",
+        "@platforms//cpu:riscv64",
+    ],
+)
+
+platform(
+    name = "x86_64_none",
+    constraint_values = [
+        "@platforms//os:none",
+        "@platforms//cpu:x86_64",
+    ],
+)

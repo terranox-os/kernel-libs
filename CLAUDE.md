@@ -22,10 +22,16 @@ bazel build //genesis-abi:genesis_abi    # single C target
 bazel build //crypto:kernel_crypto       # single Rust target
 bazel test //sync:kernel_sync_test       # single Rust test
 
+# Cross-compilation (bare-metal targets)
+./scripts/cross-build.sh                 # all 4 targets
+cargo build --workspace --target aarch64-unknown-none       # single target
+cargo build --workspace --target thumbv7em-none-eabi
+cargo build --workspace --target riscv64gc-unknown-none-elf
+cargo build --workspace --target x86_64-unknown-none
+
 # Frama-C verification (C libraries with ACSL annotations)
-frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
-frama-c -wp -wp-prover alt-ergo,z3,cvc5 bitops/src/bitmap.c
-frama-c -wp -wp-prover alt-ergo,z3,cvc5 alloc/src/bitmap_pmm.c alloc/src/pool.c
+./scripts/frama-c-verify.sh              # full WP proofs
+./scripts/frama-c-verify.sh --check-only # parse annotations only
 ```
 
 ### Crate / Target Names
@@ -95,11 +101,12 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ## CI Pipeline (`.github/workflows/ci.yml`)
 
-Seven jobs run on push/PR to `main`:
+Eight jobs run on push/PR to `main`:
 
 | Job | What it checks |
 |-----|---------------|
 | `rust-tests` | `cargo build` + `cargo test --workspace` + feature-gated tests |
+| `cross-compile` | Build all crates for x86_64-unknown-none, aarch64-unknown-none, thumbv7em-none-eabi, riscv64gc-unknown-none-elf (matrix) |
 | `rust-miri` | Miri on all crates with unsafe (sync, alloc, collections, crypto, elf, devicetree) |
 | `rust-clippy` | `cargo clippy -- -D warnings` |
 | `rust-fmt` | `cargo fmt --check` |

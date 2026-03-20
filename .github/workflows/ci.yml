@@ -27,6 +27,28 @@ jobs:
       - name: Run tests (result-names feature)
         run: cargo test -p genesis-abi --features result-names
 
+  cross-compile:
+    name: Cross-Compile (Bare Metal)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-unknown-none
+          - aarch64-unknown-none
+          - thumbv7em-none-eabi
+          - riscv64gc-unknown-none-elf
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build for ${{ matrix.target }}
+        run: cargo build --workspace --target ${{ matrix.target }}
+
   rust-miri:
     name: Miri (UB Detection)
     runs-on: ubuntu-latest
