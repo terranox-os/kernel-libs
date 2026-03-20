@@ -9,6 +9,8 @@ members = [
     "alloc",
     "collections",
     "crypto",
+    "elf",
+    "devicetree",
 ]
 
 [workspace.package]

@@ -1,0 +1,10 @@
+[package]
+name = "kernel-devicetree"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding FDT and ACPI (RSDP/MADT) parsers"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

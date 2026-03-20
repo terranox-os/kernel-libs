@@ -1,0 +1,4 @@
+# elf is Rust-only (no_std). Bazel build via rules_rust.
+# Build and test with Cargo:
+#   cargo build -p kernel-elf
+#   cargo test -p kernel-elf
