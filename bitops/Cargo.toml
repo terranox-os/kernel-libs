@@ -1,0 +1,10 @@
+[package]
+name = "kernel-bitops"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding bitmap operations on &[u32] slices"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

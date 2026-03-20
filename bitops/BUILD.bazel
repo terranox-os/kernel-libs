@@ -1,0 +1,32 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gen_bitops",
+    srcs = ["src/bitmap.c"],
+    hdrs = ["include/gen_bitops.h"],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+    deps = ["//genesis-abi:genesis_abi"],
+)
+
+cc_test(
+    name = "bitops_test",
+    srcs = ["tests/bitops_test.c"],
+    deps = [":gen_bitops"],
+    copts = [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+)
