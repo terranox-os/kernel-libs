@@ -7,6 +7,7 @@ cc_library(
     srcs = [
         "src/bitmap_pmm.c",
         "src/pool.c",
+        "src/slab.c",
     ],
     hdrs = ["include/gen_alloc.h"],
     includes = ["include"],
