@@ -46,6 +46,20 @@ typedef uint32_t GenSyscallNr;
 #define GEN_SYS_GETPID         ((GenSyscallNr)0x0006)
 #define GEN_SYS_SLEEP          ((GenSyscallNr)0x0007)
 #define GEN_SYS_CLOCK_GETTIME  ((GenSyscallNr)0x0008)
+#define GEN_SYS_OPEN           ((GenSyscallNr)0x0009)
+#define GEN_SYS_CLOSE          ((GenSyscallNr)0x000A)
+#define GEN_SYS_STAT           ((GenSyscallNr)0x000B)
+#define GEN_SYS_FSTAT          ((GenSyscallNr)0x000C)
+#define GEN_SYS_LSEEK          ((GenSyscallNr)0x000D)
+#define GEN_SYS_BRK            ((GenSyscallNr)0x000E)
+#define GEN_SYS_IOCTL          ((GenSyscallNr)0x000F)
+#define GEN_SYS_DUP2           ((GenSyscallNr)0x0010)
+#define GEN_SYS_PIPE           ((GenSyscallNr)0x0011)
+#define GEN_SYS_FORK           ((GenSyscallNr)0x0012)
+#define GEN_SYS_EXEC           ((GenSyscallNr)0x0013)
+#define GEN_SYS_WAIT           ((GenSyscallNr)0x0014)
+#define GEN_SYS_FCNTL          ((GenSyscallNr)0x0015)
+#define GEN_SYS_POLL           ((GenSyscallNr)0x0016)
 
 /* ── TerranoxOS syscalls (0x0100–0x01FF) ─────────────────── */
 
