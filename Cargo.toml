@@ -5,6 +5,7 @@ members = [
     "bitops",
     "kfmt",
     "sync",
+    "arch-intrinsics",
 ]
 
 [workspace.package]

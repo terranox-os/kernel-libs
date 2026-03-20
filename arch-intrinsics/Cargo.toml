@@ -1,0 +1,10 @@
+[package]
+name = "kernel-arch-intrinsics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding CPU intrinsics: x86_64, AArch64, ARM Cortex-M, RISC-V"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

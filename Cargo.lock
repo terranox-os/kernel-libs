@@ -7,6 +7,13 @@ name = "genesis-abi"
 version = "0.1.0"
 
 [[package]]
+name = "kernel-arch-intrinsics"
+version = "0.1.0"
+dependencies = [
+ "genesis-abi",
+]
+
+[[package]]
 name = "kernel-bitops"
 version = "0.1.0"
 dependencies = [

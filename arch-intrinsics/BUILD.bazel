@@ -1,0 +1,9 @@
+# arch-intrinsics is Rust-only (no_std, inline asm). Bazel build via rules_rust.
+# For now, build with Cargo:
+#   cargo build -p kernel-arch-intrinsics
+#
+# Note: Only compiles the module matching the host target_arch.
+# Cross-compilation:
+#   cargo build -p kernel-arch-intrinsics --target aarch64-unknown-none
+#   cargo build -p kernel-arch-intrinsics --target thumbv7em-none-eabi
+#   cargo build -p kernel-arch-intrinsics --target riscv64gc-unknown-none-elf
