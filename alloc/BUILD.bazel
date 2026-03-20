@@ -1,0 +1,38 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gen_alloc",
+    srcs = [
+        "src/bitmap_pmm.c",
+        "src/pool.c",
+    ],
+    hdrs = ["include/gen_alloc.h"],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+    deps = [
+        "//bitops:gen_bitops",
+        "//genesis-abi:genesis_abi",
+    ],
+)
+
+cc_test(
+    name = "alloc_test",
+    srcs = ["tests/alloc_test.c"],
+    deps = [":gen_alloc"],
+    copts = [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+)

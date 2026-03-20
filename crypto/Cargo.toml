@@ -1,0 +1,14 @@
+[package]
+name = "kernel-crypto"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding CRC-32, SHA-256, and HMAC-SHA256"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }
+
+[features]
+default = ["crc32-table"]
+crc32-table = []

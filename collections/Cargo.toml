@@ -1,0 +1,10 @@
+[package]
+name = "kernel-collections"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding no_std collections: IntrusiveList, RingBuf, StaticVec, StaticHashMap"
+
+[dependencies]
+genesis-abi = { path = "../genesis-abi" }

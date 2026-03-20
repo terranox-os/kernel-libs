@@ -6,6 +6,9 @@ members = [
     "kfmt",
     "sync",
     "arch-intrinsics",
+    "alloc",
+    "collections",
+    "crypto",
 ]
 
 [workspace.package]
