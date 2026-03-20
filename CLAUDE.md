@@ -76,22 +76,21 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 - **sync**: Ticket spinlock (fair FIFO), `Once<T>` with fast-path Acquire load, `atomic_bitops` on `&[AtomicU32]` with `AcqRel` ordering. All verified under Miri.
 - **arch-intrinsics**: `#[cfg(target_arch)]` gated. x86_64 (CR0-4, MSR, port I/O, CLI/STI/HLT, RDTSC, CPUID), AArch64 (sysreg macros, DMB/DSB/ISB, TLB/cache, WFI), ARM Cortex-M (PRIMASK/BASEPRI, MSP/PSP, PendSV, SysTick), RISC-V 64 (CSR macros M+S mode, fence, sfence.vma).
 - **alloc**: Bitmap PMM calls bitops C API; Pool uses embedded free-list (O(1)); Bump allocator (Rust) for early-init scratch. Slab cache (`GenSlabCache`) manages fixed-size objects across partial/full/empty slab lists with O(1) alloc from partial, page allocator callbacks for growth, and shrink to return empty slabs. `gen_slab_cache_alloc_grow` accepts a caller-provided `GenSlab` struct for dynamic expansion (no hidden allocation).
-- **collections**: `StaticVec<T,N>` (inline `MaybeUninit` array), `RingBuf<T,N>` (SPSC, `UnsafeCell`+atomics), `StaticHashMap<K,V,N>` (open addressing, FNV-1a, tombstone reuse), `IntrusiveList` (doubly-linked, raw pointers). RB tree deferred to v0.4+.
+- **collections**: `StaticVec<T,N>` (inline `MaybeUninit` array), `RingBuf<T,N>` (SPSC, `UnsafeCell`+atomics), `StaticHashMap<K,V,N>` (open addressing, FNV-1a, tombstone reuse), `IntrusiveList` (doubly-linked, raw pointers), `RbTree` (intrusive red-black tree, `u64` keys, insert/remove/find/min/max, `RbInorderIter`, Miri-verified).
 - **crypto**: CRC-32 IEEE 802.3 (feature-gated lookup table vs bitwise), SHA-256 FIPS 180-4 (streaming + one-shot), HMAC-SHA256 RFC 2104. All verified against standard test vectors.
 - **elf**: ELF64 little-endian parser. Header/section/segment parsing, symbol table with `SymbolIter` and `find_symbol_by_name`, RELA relocations with `apply_x86_64_rela` (R_X86_64_64, PC32, 32, 32S, RELATIVE).
 - **devicetree**: FDT parser (big-endian DTB blobs, node traversal by path, `FdtPropertyList` fixed-capacity). ACPI parser (RSDP v1/v2 with checksum, 16-byte aligned scan, MADT with Local APIC / I/O APIC / Interrupt Override / NMI entries).
 
 ## Testing
 
-- **138 Rust tests + 94 C tests = 232 total**, all passing
+- **149 Rust tests + 94 C tests = 243 total**, all passing
 - Rust tests run via `cargo test` on host (no QEMU)
 - C tests compile with GCC and link against object files — see `*/tests/` directories
-- Miri verified: `genesis-abi`, `sync` (critical for unsafe + atomics correctness)
+- Miri verified: `genesis-abi`, `sync`, `rbtree` (critical for unsafe + atomics correctness)
 - Crypto tests use FIPS 180-4, RFC 4231, IEEE 802.3 standard test vectors
 - `#[cfg(test)] extern crate alloc` pattern used in no_std crates that need `Vec` in tests
 
 ## Deferred
 
-- Red-black tree (`collections/src/rbtree.rs`)
 - CI pipeline (Frama-C verification, Miri, drift check between C headers and Rust mirror)
 - Bazel `rules_rust` integration
