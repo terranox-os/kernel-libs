@@ -6,29 +6,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 kernel-libs is a shared library repository of freestanding, zero-dependency crates (Rust) and static libraries (C) consumed by three OS kernels: **TerranoxOS** (security-focused desktop), **GenesisOS-RT** (robotics RTOS), and **HermeticaOS** (experimental hot-swap modules). The planning documents (`shared_kernel_libs_v11.docx`, `kernel_libs_impl_plan_v11.docx`) are the authoritative specification.
 
-## Build Systems
-
-- **Bazel** (`WORKSPACE.bazel`, `BUILD.bazel` per crate) — primary build for GenesisOS-RT integration
-- **Cargo** (`Cargo.toml` workspace at root) — Rust crates, used by TerranoxOS Rust layers
-- **C static libraries** — compiled with `-ffreestanding -nostdlib`, linked by C kernel cores via Makefile/LDFLAGS
-
-### Common Commands (once code exists)
+## Build & Test Commands
 
 ```bash
-# Rust crates
-cargo build                        # build all Rust crates
-cargo test                         # host-compiled unit tests (no QEMU needed)
-cargo test -p <crate>              # test a single crate (e.g., cargo test -p kernel-crypto)
-cargo miri test -p <crate>         # run under Miri for UB detection
+# Rust — all crates
+cargo build                              # build workspace
+cargo test                               # run all tests (host-compiled, no QEMU)
+cargo test -p <crate>                    # single crate (e.g. kernel-crypto, kernel-elf)
+cargo +nightly miri test -p <crate>      # UB detection (use for sync, collections)
 
-# C libraries
-# Build via Bazel:
-bazel build //primitives:gen_primitives
-bazel test //primitives:primitives_test
+# C libraries — compile + test manually (Bazel targets defined but rules_rust not yet wired)
+gcc -std=c17 -Wall -Wextra -Werror -Wpedantic -ffreestanding \
+    -I primitives/include -c primitives/src/memcpy.c -o memcpy.o
+# Link test: gcc -I <includes> -o test tests/<test>.c <objects...>
 
-# Frama-C verification (C libraries only)
+# Frama-C verification (C libraries with ACSL annotations)
 frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
+frama-c -wp -wp-prover alt-ergo,z3,cvc5 bitops/src/bitmap.c
+frama-c -wp -wp-prover alt-ergo,z3,cvc5 alloc/src/bitmap_pmm.c alloc/src/pool.c
 ```
+
+### Crate Names (for `cargo test -p`)
+
+| Directory | Cargo crate name |
+|-----------|-----------------|
+| genesis-abi | `genesis-abi` |
+| bitops | `kernel-bitops` |
+| kfmt | `kernel-kfmt` |
+| sync | `kernel-sync` |
+| arch-intrinsics | `kernel-arch-intrinsics` |
+| alloc | `kernel-alloc` |
+| collections | `kernel-collections` |
+| crypto | `kernel-crypto` |
+| elf | `kernel-elf` |
+| devicetree | `kernel-devicetree` |
 
 ## Design Rules (All Code Must Follow)
 
@@ -36,7 +47,7 @@ frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
 2. **Caller provides resources** — no internal allocation; callers pass buffers, function pointers (C), or trait objects (Rust)
 3. **`#![no_std]`, `no_alloc`** (Rust) / `-ffreestanding -nostdlib` (C) — no heap, no OS, no libc
 4. **Architecture-gated, not OS-gated** — use `#[cfg(target_arch)]` or `#ifdef __x86_64__`, never `#ifdef __linux__`
-5. **Dual-language where needed** — crates consumed by both C and Rust kernels must provide both implementations or export C-ABI from Rust. Cross-language build deps must never break single-language builds.
+5. **Dual-language where needed** — crates consumed by both C and Rust kernels provide both implementations. Cross-language build deps must never break single-language builds.
 6. **Frama-C ACSL annotations** required on all C functions (requires/ensures/assigns/loop invariants)
 
 ## Architecture
@@ -44,7 +55,7 @@ frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
 ### Crate Dependency Layers
 
 ```
-Layer 0:  genesis-abi (C headers = source of truth, Rust mirror with CI drift check)
+Layer 0:  genesis-abi (C headers = source of truth, Rust mirror)
 Layer 1:  primitives(C) | bitops(C+Rust) | kfmt(C+Rust) | sync(Rust) | arch-intrinsics(Rust)
 Layer 2:  alloc(C+Rust) | collections(Rust) | crypto(Rust)
 Layer 3:  elf(Rust) | devicetree(Rust)
@@ -58,29 +69,30 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ### Critical Implementation Details
 
-- **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions.
-- **primitives**: Functions are namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` that forward to gen_* functions. Link `aliases.c` exactly once in the final image. All C sources have Frama-C ACSL annotations. Word-aligned fast paths in memcpy/memset.
-- **bitops**: Dual C + Rust implementations with identical semantics. C uses `uint32_t*` raw pointers; Rust uses `&[u32]` slices with bounds checking. C implementation uses `__builtin_ctz()` and `__builtin_popcount()`.
-- **kfmt**: Callback signature uses `uint8_t` (not `char`) for unambiguous byte semantics across platforms. Rust side uses `core::fmt::Write` trait with `FnMut(u8)` closure.
-- **sync**: `atomic_bitops` uses `AtomicU32` with `AcqRel`/`Acquire` ordering. Non-atomic bitops in `bitops/` are for interrupt-disabled critical sections only.
-- **alloc**: Slab allocator deferred to v0.4+. Bump allocator (Rust) is for early init / per-frame scratch. Pool allocator (C) is O(1) fixed-block for RTOS.
-- **collections**: Red-black tree deferred to v0.4+.
+- **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions. Error codes use gaps between groups (general -1..-10, security -16..-18, I/O -32..-34, format -48..-50, module -64..-67) to allow future additions. Syscall ranges are 256 entries each: shared 0x0000, TerranoxOS 0x0100, GenesisOS-RT 0x0200, HermeticaOS 0x0300.
+- **primitives**: Functions namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` — link exactly once. Word-aligned fast paths in memcpy/memset. `gen_secure_zero` uses volatile writes to prevent dead-store elimination.
+- **bitops**: Dual C + Rust with identical semantics. C uses `uint32_t*` raw pointers + `__builtin_ctz()`/`__builtin_popcount()`; Rust uses `&[u32]` slices with bounds checking + `BitIter`. Bitmap convention: 0 = free, 1 = allocated.
+- **kfmt**: C callback signature uses `uint8_t` (not `char`) for unambiguous byte semantics. Supports `%d/%i/%u/%x/%X/%p/%s/%c/%%`, width, zero-padding, `l`/`ll` length modifiers. Rust side provides `KernelWriter<F: FnMut(u8)>` implementing `core::fmt::Write`, `CountingWriter`, and `kwrite!` macro.
+- **sync**: Ticket spinlock (fair FIFO), `Once<T>` with fast-path Acquire load, `atomic_bitops` on `&[AtomicU32]` with `AcqRel` ordering. All verified under Miri.
+- **arch-intrinsics**: `#[cfg(target_arch)]` gated. x86_64 (CR0-4, MSR, port I/O, CLI/STI/HLT, RDTSC, CPUID), AArch64 (sysreg macros, DMB/DSB/ISB, TLB/cache, WFI), ARM Cortex-M (PRIMASK/BASEPRI, MSP/PSP, PendSV, SysTick), RISC-V 64 (CSR macros M+S mode, fence, sfence.vma).
+- **alloc**: Bitmap PMM calls bitops C API; Pool uses embedded free-list (O(1)); Bump allocator (Rust) for early-init scratch. Slab deferred to v0.4+.
+- **collections**: `StaticVec<T,N>` (inline `MaybeUninit` array), `RingBuf<T,N>` (SPSC, `UnsafeCell`+atomics), `StaticHashMap<K,V,N>` (open addressing, FNV-1a, tombstone reuse), `IntrusiveList` (doubly-linked, raw pointers). RB tree deferred to v0.4+.
+- **crypto**: CRC-32 IEEE 802.3 (feature-gated lookup table vs bitwise), SHA-256 FIPS 180-4 (streaming + one-shot), HMAC-SHA256 RFC 2104. All verified against standard test vectors.
+- **elf**: ELF64 little-endian parser. Header/section/segment parsing, symbol table with `SymbolIter` and `find_symbol_by_name`, RELA relocations with `apply_x86_64_rela` (R_X86_64_64, PC32, 32, 32S, RELATIVE).
+- **devicetree**: FDT parser (big-endian DTB blobs, node traversal by path, `FdtPropertyList` fixed-capacity). ACPI parser (RSDP v1/v2 with checksum, 16-byte aligned scan, MADT with Local APIC / I/O APIC / Interrupt Override / NMI entries).
 
-### "Extract from GenesisOS" Means Rewrite
+## Testing
 
-GenesisOS is now C++. Extraction means **rewriting C++ to pure C17** — not copy-paste. Remove all C++ constructs.
+- **138 Rust tests + 81 C tests = 219 total**, all passing
+- Rust tests run via `cargo test` on host (no QEMU)
+- C tests compile with GCC and link against object files — see `*/tests/` directories
+- Miri verified: `genesis-abi`, `sync` (critical for unsafe + atomics correctness)
+- Crypto tests use FIPS 180-4, RFC 4231, IEEE 802.3 standard test vectors
+- `#[cfg(test)] extern crate alloc` pattern used in no_std crates that need `Vec` in tests
 
-## Versioning / Release Plan
+## Deferred to v0.4.0+
 
-| Version | Crates |
-|---------|--------|
-| v0.1.0 | genesis-abi |
-| v0.2.0 | primitives, bitops, kfmt, sync, arch-intrinsics (x86-64) |
-| v0.3.0 | alloc (PMM + pool + bump), collections, crypto |
-| v0.4.0 | elf, devicetree, arch-intrinsics (AArch64 + ARM-CM), alloc (slab) |
-
-## Testing Strategy
-
-- **Rust crates**: `cargo test` (host-compiled, no QEMU). Miri for UB detection. `cargo-fuzz` for coverage-guided fuzzing.
-- **C libraries**: Bazel test targets or standalone test harness. Frama-C WP plugin for formal verification (Alt-Ergo, Z3, CVC5 solvers). Failing proofs block merge in CI.
-- All tests must run on the host — no hardware or emulator required.
+- Slab allocator (`alloc/src/slab.c`)
+- Red-black tree (`collections/src/rbtree.rs`)
+- CI pipeline (Frama-C verification, Miri, drift check between C headers and Rust mirror)
+- Bazel `rules_rust` integration
