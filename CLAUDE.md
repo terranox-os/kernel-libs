@@ -59,7 +59,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 ### Critical Implementation Details
 
 - **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions.
-- **primitives**: Functions are namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are aliased **only in `aliases.c`** via `__attribute__((alias))`. Never put alias definitions in headers (causes duplicate symbols at link time).
+- **primitives**: Functions are namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` that forward to gen_* functions. Link `aliases.c` exactly once in the final image. All C sources have Frama-C ACSL annotations. Word-aligned fast paths in memcpy/memset.
 - **bitops**: Dual C + Rust implementations with identical semantics. C uses `uint32_t*` raw pointers; Rust uses `&[u32]` slices with bounds checking. C implementation uses `__builtin_ctz()` and `__builtin_popcount()`.
 - **kfmt**: Callback signature uses `uint8_t` (not `char`) for unambiguous byte semantics across platforms. Rust side uses `core::fmt::Write` trait with `FnMut(u8)` closure.
 - **sync**: `atomic_bitops` uses `AtomicU32` with `AcqRel`/`Acquire` ordering. Non-atomic bitops in `bitops/` are for interrupt-disabled critical sections only.

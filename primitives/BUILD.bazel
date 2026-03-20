@@ -1,0 +1,59 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "gen_primitives",
+    srcs = [
+        "src/memcpy.c",
+        "src/memset.c",
+        "src/memmove.c",
+        "src/memcmp.c",
+        "src/strlen.c",
+        "src/strncmp.c",
+        "src/strnlen.c",
+        "src/secure_zero.c",
+    ],
+    hdrs = ["include/gen_primitives.h"],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+    deps = ["//genesis-abi:genesis_abi"],
+)
+
+# Separate target for aliases — kernel links this once
+cc_library(
+    name = "gen_primitives_aliases",
+    srcs = ["src/aliases.c"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+    deps = [":gen_primitives"],
+)
+
+cc_test(
+    name = "primitives_test",
+    srcs = ["tests/primitives_test.c"],
+    deps = [
+        ":gen_primitives",
+        ":gen_primitives_aliases",
+    ],
+    copts = [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+)
