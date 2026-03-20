@@ -1,0 +1,11 @@
+[package]
+name = "genesis-abi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Freestanding ABI types for TerranoxOS, GenesisOS-RT, and HermeticaOS"
+
+[features]
+default = []
+result-names = []
