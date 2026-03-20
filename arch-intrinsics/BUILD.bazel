@@ -1,9 +1,24 @@
-# arch-intrinsics is Rust-only (no_std, inline asm). Bazel build via rules_rust.
-# For now, build with Cargo:
-#   cargo build -p kernel-arch-intrinsics
-#
-# Note: Only compiles the module matching the host target_arch.
-# Cross-compilation:
-#   cargo build -p kernel-arch-intrinsics --target aarch64-unknown-none
-#   cargo build -p kernel-arch-intrinsics --target thumbv7em-none-eabi
-#   cargo build -p kernel-arch-intrinsics --target riscv64gc-unknown-none-elf
+load("@rules_rust//rust:defs.bzl", "rust_library")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "kernel_arch_intrinsics",
+    srcs = [
+        "src/lib.rs",
+        "src/x86_64.rs",
+        "src/aarch64.rs",
+        "src/arm_cm.rs",
+        "src/riscv64.rs",
+    ],
+    crate_name = "kernel_arch_intrinsics",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+# No rust_test: inline asm functions cannot be tested on host
+# without the actual hardware. Cross-compile to verify:
+#   bazel build //arch-intrinsics:kernel_arch_intrinsics \
+#     --platforms=@rules_rust//rust/platform:aarch64-unknown-none
+
+exports_files(["Cargo.toml"])

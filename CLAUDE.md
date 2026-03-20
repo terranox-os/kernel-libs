@@ -9,16 +9,18 @@ kernel-libs is a shared library repository of freestanding, zero-dependency crat
 ## Build & Test Commands
 
 ```bash
-# Rust — all crates
+# Cargo (Rust crates)
 cargo build                              # build workspace
 cargo test                               # run all tests (host-compiled, no QEMU)
 cargo test -p <crate>                    # single crate (e.g. kernel-crypto, kernel-elf)
 cargo +nightly miri test -p <crate>      # UB detection (use for sync, collections)
 
-# C libraries — compile + test manually (Bazel targets defined but rules_rust not yet wired)
-gcc -std=c17 -Wall -Wextra -Werror -Wpedantic -ffreestanding \
-    -I primitives/include -c primitives/src/memcpy.c -o memcpy.o
-# Link test: gcc -I <includes> -o test tests/<test>.c <objects...>
+# Bazel (all C + Rust targets)
+bazel build //...                        # build everything
+bazel test //...                         # run all 14 test targets
+bazel build //genesis-abi:genesis_abi    # single C target
+bazel build //crypto:kernel_crypto       # single Rust target
+bazel test //sync:kernel_sync_test       # single Rust test
 
 # Frama-C verification (C libraries with ACSL annotations)
 frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
@@ -26,20 +28,21 @@ frama-c -wp -wp-prover alt-ergo,z3,cvc5 bitops/src/bitmap.c
 frama-c -wp -wp-prover alt-ergo,z3,cvc5 alloc/src/bitmap_pmm.c alloc/src/pool.c
 ```
 
-### Crate Names (for `cargo test -p`)
+### Crate / Target Names
 
-| Directory | Cargo crate name |
-|-----------|-----------------|
-| genesis-abi | `genesis-abi` |
-| bitops | `kernel-bitops` |
-| kfmt | `kernel-kfmt` |
-| sync | `kernel-sync` |
-| arch-intrinsics | `kernel-arch-intrinsics` |
-| alloc | `kernel-alloc` |
-| collections | `kernel-collections` |
-| crypto | `kernel-crypto` |
-| elf | `kernel-elf` |
-| devicetree | `kernel-devicetree` |
+| Directory | Cargo crate | Bazel C target | Bazel Rust target |
+|-----------|------------|----------------|-------------------|
+| genesis-abi | `genesis-abi` | `//genesis-abi:genesis_abi` | `//genesis-abi:genesis_abi_rs` |
+| primitives | — | `//primitives:gen_primitives` | — |
+| bitops | `kernel-bitops` | `//bitops:gen_bitops` | `//bitops:kernel_bitops` |
+| kfmt | `kernel-kfmt` | `//kfmt:gen_kfmt` | `//kfmt:kernel_kfmt` |
+| sync | `kernel-sync` | — | `//sync:kernel_sync` |
+| arch-intrinsics | `kernel-arch-intrinsics` | — | `//arch-intrinsics:kernel_arch_intrinsics` |
+| alloc | `kernel-alloc` | `//alloc:gen_alloc` | `//alloc:kernel_alloc` |
+| collections | `kernel-collections` | — | `//collections:kernel_collections` |
+| crypto | `kernel-crypto` | — | `//crypto:kernel_crypto` |
+| elf | `kernel-elf` | — | `//elf:kernel_elf` |
+| devicetree | `kernel-devicetree` | — | `//devicetree:kernel_devicetree` |
 
 ## Design Rules (All Code Must Follow)
 
@@ -110,5 +113,4 @@ frama-c -wp -wp-prover alt-ergo,z3,cvc5 primitives/src/*.c
 
 ## Deferred
 
-- Bazel `rules_rust` integration
 - Frama-C in CI (needs solver packages)

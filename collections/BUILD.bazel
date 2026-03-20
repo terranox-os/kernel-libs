@@ -1,4 +1,25 @@
-# collections is Rust-only (no_std). Bazel build via rules_rust.
-# Build and test with Cargo:
-#   cargo build -p kernel-collections
-#   cargo test -p kernel-collections
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "kernel_collections",
+    srcs = [
+        "src/lib.rs",
+        "src/static_vec.rs",
+        "src/ringbuf.rs",
+        "src/static_hashmap.rs",
+        "src/intrusive_list.rs",
+        "src/rbtree.rs",
+    ],
+    crate_name = "kernel_collections",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_collections_test",
+    crate = ":kernel_collections",
+)
+
+exports_files(["Cargo.toml"])

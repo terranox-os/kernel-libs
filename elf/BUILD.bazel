@@ -1,4 +1,23 @@
-# elf is Rust-only (no_std). Bazel build via rules_rust.
-# Build and test with Cargo:
-#   cargo build -p kernel-elf
-#   cargo test -p kernel-elf
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "kernel_elf",
+    srcs = [
+        "src/lib.rs",
+        "src/parser.rs",
+        "src/symbols.rs",
+        "src/reloc.rs",
+    ],
+    crate_name = "kernel_elf",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_elf_test",
+    crate = ":kernel_elf",
+)
+
+exports_files(["Cargo.toml"])

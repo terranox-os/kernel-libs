@@ -1,4 +1,22 @@
-# devicetree is Rust-only (no_std). Bazel build via rules_rust.
-# Build and test with Cargo:
-#   cargo build -p kernel-devicetree
-#   cargo test -p kernel-devicetree
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "kernel_devicetree",
+    srcs = [
+        "src/lib.rs",
+        "src/fdt.rs",
+        "src/acpi.rs",
+    ],
+    crate_name = "kernel_devicetree",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_devicetree_test",
+    crate = ":kernel_devicetree",
+)
+
+exports_files(["Cargo.toml"])

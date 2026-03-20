@@ -1,4 +1,24 @@
-# crypto is Rust-only (no_std). Bazel build via rules_rust.
-# Build and test with Cargo:
-#   cargo build -p kernel-crypto
-#   cargo test -p kernel-crypto
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "kernel_crypto",
+    srcs = [
+        "src/lib.rs",
+        "src/crc32.rs",
+        "src/sha256.rs",
+        "src/hmac.rs",
+    ],
+    crate_name = "kernel_crypto",
+    edition = "2021",
+    crate_features = ["crc32-table"],
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_crypto_test",
+    crate = ":kernel_crypto",
+)
+
+exports_files(["Cargo.toml"])

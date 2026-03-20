@@ -1,6 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
+
+# ── C implementation ─────────────────────────────────────────
 
 cc_library(
     name = "gen_kfmt",
@@ -30,3 +33,20 @@ cc_test(
         "-Werror",
     ],
 )
+
+# ── Rust implementation ──────────────────────────────────────
+
+rust_library(
+    name = "kernel_kfmt",
+    srcs = ["src/lib.rs"],
+    crate_name = "kernel_kfmt",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_kfmt_test",
+    crate = ":kernel_kfmt",
+)
+
+exports_files(["Cargo.toml"])

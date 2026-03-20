@@ -1,6 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
+
+# ── C header-only library (ABI source of truth) ─────────────
 
 cc_library(
     name = "genesis_abi",
@@ -32,3 +35,20 @@ cc_test(
         "-Werror",
     ],
 )
+
+# ── Rust mirror crate ────────────────────────────────────────
+
+rust_library(
+    name = "genesis_abi_rs",
+    srcs = ["src/lib.rs"],
+    crate_name = "genesis_abi",
+    edition = "2021",
+    crate_features = [],
+)
+
+rust_test(
+    name = "genesis_abi_rs_test",
+    crate = ":genesis_abi_rs",
+)
+
+exports_files(["Cargo.toml"])

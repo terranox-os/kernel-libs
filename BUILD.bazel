@@ -1,0 +1,6 @@
+# Root BUILD.bazel — exports Cargo manifests for crate_universe.
+
+exports_files([
+    "Cargo.toml",
+    "Cargo.lock",
+])

@@ -1,1 +1,2 @@
-workspace(name = "kernel_libs")
+# Intentionally empty — using MODULE.bazel (bzlmod) for dependency management.
+# This file exists to mark the workspace root for Bazel.

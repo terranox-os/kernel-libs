@@ -1,6 +1,9 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
+
+# ── C allocators (PMM, Pool, Slab) ──────────────────────────
 
 cc_library(
     name = "gen_alloc",
@@ -37,3 +40,23 @@ cc_test(
         "-Werror",
     ],
 )
+
+# ── Rust bump allocator ──────────────────────────────────────
+
+rust_library(
+    name = "kernel_alloc",
+    srcs = [
+        "src/lib.rs",
+        "src/bump.rs",
+    ],
+    crate_name = "kernel_alloc",
+    edition = "2021",
+    deps = ["//genesis-abi:genesis_abi_rs"],
+)
+
+rust_test(
+    name = "kernel_alloc_test",
+    crate = ":kernel_alloc",
+)
+
+exports_files(["Cargo.toml"])
