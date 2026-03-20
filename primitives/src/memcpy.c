@@ -34,7 +34,7 @@ void *gen_memcpy(void *dst, const void *src, size_t n)
 
         /*@
           loop invariant 0 <= words;
-          loop assigns words, dw[0 ..], sw, dw;
+          loop assigns words, *dw, sw, dw;
           loop variant words;
         */
         while (words > 0) {
@@ -49,7 +49,7 @@ void *gen_memcpy(void *dst, const void *src, size_t n)
 
     /*@
       loop invariant 0 <= n;
-      loop assigns n, d[0 ..], d, s;
+      loop assigns n, *d, d, s;
       loop variant n;
     */
     while (n > 0) {

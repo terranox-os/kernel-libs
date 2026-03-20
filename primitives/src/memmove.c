@@ -26,7 +26,7 @@ void *gen_memmove(void *dst, const void *src, size_t n)
         /* No overlap or dst is before src: forward copy */
         /*@
           loop invariant 0 <= n;
-          loop assigns n, d[0 ..], d, s;
+          loop assigns n, *d, d, s;
           loop variant n;
         */
         while (n > 0) {
@@ -39,7 +39,7 @@ void *gen_memmove(void *dst, const void *src, size_t n)
         s += n;
         /*@
           loop invariant 0 <= n;
-          loop assigns n, d, s, ((unsigned char *)dst)[0 ..];
+          loop assigns n, d, s, *d;
           loop variant n;
         */
         while (n > 0) {

@@ -21,7 +21,7 @@ void gen_secure_zero(volatile void *dst, size_t n)
 
     /*@
       loop invariant 0 <= n;
-      loop assigns n, d[0 ..], d;
+      loop assigns n, *d, d;
       loop variant n;
     */
     while (n > 0) {

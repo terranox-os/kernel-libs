@@ -14,7 +14,7 @@
 /*@
   requires \valid(bitmap + (bit / 32));
   assigns bitmap[bit / 32];
-  ensures gen_bit_test(bitmap, bit);
+  ensures (bitmap[bit / 32] & ((uint32_t)1 << (bit % 32))) != 0;
 */
 void gen_bit_set(uint32_t *bitmap, uint32_t bit)
 {
@@ -24,7 +24,7 @@ void gen_bit_set(uint32_t *bitmap, uint32_t bit)
 /*@
   requires \valid(bitmap + (bit / 32));
   assigns bitmap[bit / 32];
-  ensures !gen_bit_test(bitmap, bit);
+  ensures (bitmap[bit / 32] & ((uint32_t)1 << (bit % 32))) == 0;
 */
 void gen_bit_clear(uint32_t *bitmap, uint32_t bit)
 {
@@ -56,7 +56,8 @@ void gen_bit_toggle(uint32_t *bitmap, uint32_t bit)
            \valid_read(bitmap + (0 .. (nbits - 1) / 32));
   assigns \nothing;
   ensures \result == UINT32_MAX ||
-          (\result < nbits && gen_bit_test(bitmap, \result));
+          (\result < nbits &&
+           (bitmap[\result / 32] & ((uint32_t)1 << (\result % 32))) != 0);
 */
 uint32_t gen_bitmap_ffs(const uint32_t *bitmap, uint32_t nbits)
 {
@@ -86,7 +87,8 @@ uint32_t gen_bitmap_ffs(const uint32_t *bitmap, uint32_t nbits)
            \valid_read(bitmap + (0 .. (nbits - 1) / 32));
   assigns \nothing;
   ensures \result == UINT32_MAX ||
-          (\result < nbits && !gen_bit_test(bitmap, \result));
+          (\result < nbits &&
+           (bitmap[\result / 32] & ((uint32_t)1 << (\result % 32))) == 0);
 */
 uint32_t gen_bitmap_ffz(const uint32_t *bitmap, uint32_t nbits)
 {
@@ -153,7 +155,7 @@ void gen_bitmap_set_range(uint32_t *bitmap, uint32_t start, uint32_t count)
 {
     /*@
       loop invariant 0 <= count;
-      loop assigns count, start, bitmap[start / 32 ..];
+      loop assigns count, start, bitmap[start / 32 .. (start + count - 1) / 32];
       loop variant count;
     */
     while (count > 0) {
@@ -187,7 +189,7 @@ void gen_bitmap_clear_range(uint32_t *bitmap, uint32_t start, uint32_t count)
 {
     /*@
       loop invariant 0 <= count;
-      loop assigns count, start, bitmap[start / 32 ..];
+      loop assigns count, start, bitmap[start / 32 .. (start + count - 1) / 32];
       loop variant count;
     */
     while (count > 0) {
@@ -216,7 +218,7 @@ void gen_bitmap_clear_range(uint32_t *bitmap, uint32_t start, uint32_t count)
   requires nbits == 0 ||
            \valid(bitmap + (0 .. (nbits - 1) / 32));
   assigns bitmap[0 .. (nbits - 1) / 32];
-  ensures gen_bitmap_popcount(bitmap, nbits) == 0;
+  ensures \forall integer k; 0 <= k < (nbits + 31) / 32 ==> bitmap[k] == 0;
 */
 void gen_bitmap_clear_all(uint32_t *bitmap, uint32_t nbits)
 {

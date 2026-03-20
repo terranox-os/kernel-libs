@@ -48,7 +48,7 @@ verify_file() {
     if $CHECK_ONLY; then
         # Parse ACSL annotations only — no proof discharge
         if frama-c -kernel-warn-key annot-error=abort \
-                   $includes \
+                   "-cpp-extra-args=$includes" \
                    -machdep x86_64 \
                    "$ROOT_DIR/$src" 2>&1 | grep -qi "error"; then
             echo -e "${RED}FAIL (parse error)${NC}"
@@ -57,12 +57,12 @@ verify_file() {
             echo -e "${GREEN}OK (parsed)${NC}"
         fi
     else
-        # Full WP verification with SMT solvers
+        # Full WP verification with Alt-Ergo
         if frama-c -wp \
-                   -wp-prover alt-ergo,z3,cvc5 \
+                   -wp-prover alt-ergo \
                    -wp-timeout 30 \
                    -kernel-warn-key annot-error=abort \
-                   $includes \
+                   "-cpp-extra-args=$includes" \
                    -machdep x86_64 \
                    "$ROOT_DIR/$src" 2>&1; then
             echo -e "${GREEN}OK${NC}"
@@ -75,7 +75,7 @@ verify_file() {
 
 echo ""
 echo "=== Primitives ==="
-PRIM_INCLUDES="-cpp-extra-args=-I$ROOT_DIR/primitives/include"
+PRIM_INCLUDES="-I$ROOT_DIR/primitives/include"
 for src in primitives/src/memcpy.c \
            primitives/src/memset.c \
            primitives/src/memmove.c \
@@ -89,14 +89,14 @@ done
 
 echo ""
 echo "=== Bitops ==="
-BITOPS_INCLUDES="-cpp-extra-args=-I$ROOT_DIR/bitops/include"
+BITOPS_INCLUDES="-I$ROOT_DIR/bitops/include"
 verify_file "bitops/src/bitmap.c" "$BITOPS_INCLUDES" "bitops"
 
 echo ""
 echo "=== Alloc ==="
-ALLOC_INCLUDES="-cpp-extra-args=-I$ROOT_DIR/alloc/include -I$ROOT_DIR/genesis-abi/include -I$ROOT_DIR/bitops/include"
+ALLOC_INCLUDES="-I$ROOT_DIR/alloc/include -I$ROOT_DIR/genesis-abi/include -I$ROOT_DIR/bitops/include"
 verify_file "alloc/src/bitmap_pmm.c" "$ALLOC_INCLUDES" "alloc"
-verify_file "alloc/src/pool.c" "-cpp-extra-args=-I$ROOT_DIR/alloc/include -I$ROOT_DIR/genesis-abi/include" "alloc"
+verify_file "alloc/src/pool.c" "-I$ROOT_DIR/alloc/include -I$ROOT_DIR/genesis-abi/include" "alloc"
 verify_file "alloc/src/slab.c" "$ALLOC_INCLUDES" "alloc"
 
 echo ""

@@ -34,7 +34,7 @@ void gen_pmm_init(GenPmm *pmm, uint32_t *bitmap,
 
 /*@
   requires \valid(pmm);
-  assigns pmm->free_pages, pmm->bitmap[0 ..];
+  assigns pmm->free_pages, pmm->bitmap[0 .. (pmm->total_pages - 1) / 32];
 */
 uint64_t gen_pmm_alloc_page(GenPmm *pmm)
 {
@@ -55,7 +55,7 @@ uint64_t gen_pmm_alloc_page(GenPmm *pmm)
 
 /*@
   requires \valid(pmm);
-  assigns pmm->free_pages, pmm->bitmap[0 ..];
+  assigns pmm->free_pages, pmm->bitmap[0 .. (pmm->total_pages - 1) / 32];
 */
 void gen_pmm_free_page(GenPmm *pmm, uint64_t addr)
 {
@@ -79,7 +79,7 @@ void gen_pmm_free_page(GenPmm *pmm, uint64_t addr)
 /*@
   requires \valid(pmm);
   requires count > 0;
-  assigns pmm->free_pages, pmm->bitmap[0 ..];
+  assigns pmm->free_pages, pmm->bitmap[0 .. (pmm->total_pages - 1) / 32];
 */
 uint64_t gen_pmm_alloc_contiguous(GenPmm *pmm, uint32_t count)
 {
@@ -118,7 +118,7 @@ uint64_t gen_pmm_alloc_contiguous(GenPmm *pmm, uint32_t count)
 
 /*@
   requires \valid(pmm);
-  assigns pmm->free_pages, pmm->bitmap[0 ..];
+  assigns pmm->free_pages, pmm->bitmap[0 .. (pmm->total_pages - 1) / 32];
 */
 void gen_pmm_mark_reserved(GenPmm *pmm, uint64_t addr, uint32_t count)
 {

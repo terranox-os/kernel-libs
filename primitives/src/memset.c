@@ -33,7 +33,7 @@ void *gen_memset(void *dst, int c, size_t n)
 
         /*@
           loop invariant 0 <= words;
-          loop assigns words, dw[0 ..], dw;
+          loop assigns words, *dw, dw;
           loop variant words;
         */
         while (words > 0) {
@@ -47,7 +47,7 @@ void *gen_memset(void *dst, int c, size_t n)
 
     /*@
       loop invariant 0 <= n;
-      loop assigns n, d[0 ..], d;
+      loop assigns n, *d, d;
       loop variant n;
     */
     while (n > 0) {
