@@ -104,7 +104,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ## Testing
 
-- **149 Rust tests + 94 C tests = 243 total**, all passing
+- **149 Rust tests + 104 C tests = 253 total**, all passing
 - Rust tests run via `cargo test` on host (no QEMU)
 - C tests compile with GCC (`-ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic`) and link against object files — see `*/tests/` directories
 - Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree`
