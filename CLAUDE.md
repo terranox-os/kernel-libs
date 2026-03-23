@@ -59,6 +59,18 @@ cargo build --workspace --target x86_64-unknown-none
 5. **Dual-language where needed** — crates consumed by both C and Rust kernels provide both implementations. Cross-language build deps must never break single-language builds.
 6. **Frama-C ACSL annotations** required on all C functions (requires/ensures/assigns/loop invariants)
 
+## Toolchain & Build System
+
+- **Rust**: Edition 2021, toolchain 1.84.0 (pinned in `MODULE.bazel`)
+- **C**: C17 standard (`-std=c17`), compiled with `-ffreestanding -nostdlib`
+- **Bazel**: Uses bzlmod (`MODULE.bazel`) — `WORKSPACE.bazel` is intentionally empty. `rules_cc` 0.2.17, `rules_rust` 0.69.0.
+- **Cargo**: Workspace resolver 2. All crates depend on `genesis-abi` via path dependency.
+
+### Feature Flags
+
+- `genesis-abi`: `result-names` — enables human-readable error name strings
+- `kernel-crypto`: `crc32-table` (default) — lookup table CRC-32 vs bitwise fallback
+
 ## Architecture
 
 ### Crate Dependency Layers
@@ -79,7 +91,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 ### Critical Implementation Details
 
 - **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions. Error codes use gaps between groups (general -1..-10, security -16..-18, I/O -32..-34, format -48..-50, module -64..-67, RT -80..-82, syscall -96..-98) to allow future additions. Note: `GEN_ERR_INTERRUPTED` (-9) is general interruption; `GEN_ERR_SYSCALL_INTERRUPTED` (-98) is syscall-specific. Syscall ranges are 256 entries each: shared 0x0000, TerranoxOS 0x0100, GenesisOS-RT 0x0200, HermeticaOS 0x0300.
-- **primitives**: Functions namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` — link exactly once. Word-aligned fast paths in memcpy/memset. `gen_secure_zero` uses volatile writes to prevent dead-store elimination.
+- **primitives**: Functions namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` — built as separate Bazel target `//primitives:gen_primitives_aliases`, link exactly once. Word-aligned fast paths in memcpy/memset. `gen_secure_zero` uses volatile writes to prevent dead-store elimination.
 - **bitops**: Dual C + Rust with identical semantics. C uses `uint32_t*` raw pointers + `__builtin_ctz()`/`__builtin_popcount()`; Rust uses `&[u32]` slices with bounds checking + `BitIter`. Bitmap convention: 0 = free, 1 = allocated.
 - **kfmt**: C callback signature uses `uint8_t` (not `char`) for unambiguous byte semantics. Supports `%d/%i/%u/%x/%X/%p/%s/%c/%%`, width, zero-padding, `l`/`ll` length modifiers. Rust side provides `KernelWriter<F: FnMut(u8)>` implementing `core::fmt::Write`, `CountingWriter`, and `kwrite!` macro.
 - **sync**: Ticket spinlock (fair FIFO), `Once<T>` with fast-path Acquire load, `atomic_bitops` on `&[AtomicU32]` with `AcqRel` ordering. All verified under Miri.
@@ -94,10 +106,11 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 - **149 Rust tests + 94 C tests = 243 total**, all passing
 - Rust tests run via `cargo test` on host (no QEMU)
-- C tests compile with GCC and link against object files — see `*/tests/` directories
-- Miri verified: `genesis-abi`, `sync`, `rbtree` (critical for unsafe + atomics correctness)
+- C tests compile with GCC (`-ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic`) and link against object files — see `*/tests/` directories
+- Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree`
 - Crypto tests use FIPS 180-4, RFC 4231, IEEE 802.3 standard test vectors
 - `#[cfg(test)] extern crate alloc` pattern used in no_std crates that need `Vec` in tests
+- Feature-gated tests: `cargo test -p genesis-abi --features result-names` (run in CI)
 
 ## CI Pipeline (`.github/workflows/ci.yml`)
 
