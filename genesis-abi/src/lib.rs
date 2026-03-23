@@ -144,6 +144,20 @@ pub mod syscall {
     pub const SYS_GETPID: GenSyscallNr = GenSyscallNr(0x0006);
     pub const SYS_SLEEP: GenSyscallNr = GenSyscallNr(0x0007);
     pub const SYS_CLOCK_GETTIME: GenSyscallNr = GenSyscallNr(0x0008);
+    pub const SYS_OPEN: GenSyscallNr = GenSyscallNr(0x0009);
+    pub const SYS_CLOSE: GenSyscallNr = GenSyscallNr(0x000A);
+    pub const SYS_STAT: GenSyscallNr = GenSyscallNr(0x000B);
+    pub const SYS_FSTAT: GenSyscallNr = GenSyscallNr(0x000C);
+    pub const SYS_LSEEK: GenSyscallNr = GenSyscallNr(0x000D);
+    pub const SYS_BRK: GenSyscallNr = GenSyscallNr(0x000E);
+    pub const SYS_IOCTL: GenSyscallNr = GenSyscallNr(0x000F);
+    pub const SYS_DUP2: GenSyscallNr = GenSyscallNr(0x0010);
+    pub const SYS_PIPE: GenSyscallNr = GenSyscallNr(0x0011);
+    pub const SYS_FORK: GenSyscallNr = GenSyscallNr(0x0012);
+    pub const SYS_EXEC: GenSyscallNr = GenSyscallNr(0x0013);
+    pub const SYS_WAIT: GenSyscallNr = GenSyscallNr(0x0014);
+    pub const SYS_FCNTL: GenSyscallNr = GenSyscallNr(0x0015);
+    pub const SYS_POLL: GenSyscallNr = GenSyscallNr(0x0016);
 
     // TerranoxOS syscalls (0x0100–0x01FF)
     pub const SYS_CAP_GRANT: GenSyscallNr = GenSyscallNr(0x0100);
@@ -177,7 +191,7 @@ pub mod syscall {
 impl GenSyscallNr {
     #[inline]
     pub const fn is_shared(self) -> bool {
-        self.0 >= syscall::SHARED_BASE.0 && self.0 < syscall::SHARED_LIMIT.0
+        self.0 < syscall::SHARED_LIMIT.0
     }
 
     #[inline]
@@ -268,13 +282,10 @@ pub struct GenKernelAPI {
     pub alloc_pages: Option<unsafe extern "C" fn(count: usize) -> *mut u8>,
     pub free_pages: Option<unsafe extern "C" fn(addr: *mut u8, count: usize)>,
 
-    pub log: Option<
-        unsafe extern "C" fn(level: u8, msg: *const u8, len: usize) -> GenResult,
-    >,
+    pub log: Option<unsafe extern "C" fn(level: u8, msg: *const u8, len: usize) -> GenResult>,
 
-    pub ipc_send: Option<
-        unsafe extern "C" fn(target: u32, data: *const u8, len: usize) -> GenResult,
-    >,
+    pub ipc_send:
+        Option<unsafe extern "C" fn(target: u32, data: *const u8, len: usize) -> GenResult>,
     pub ipc_recv: Option<
         unsafe extern "C" fn(
             source: *mut u32,
@@ -303,9 +314,8 @@ pub struct GenKernelAPI {
     >,
     pub timer_cancel: Option<unsafe extern "C" fn(timer_id: u32) -> GenResult>,
 
-    pub query_capability: Option<
-        unsafe extern "C" fn(cap: GenCapability, out_granted: *mut i32) -> GenResult,
-    >,
+    pub query_capability:
+        Option<unsafe extern "C" fn(cap: GenCapability, out_granted: *mut i32) -> GenResult>,
 }
 
 /// Module descriptor placed in the `.gen_module` ELF section.
@@ -483,13 +493,23 @@ mod tests {
             syscall::SYS_GETPID,
             syscall::SYS_SLEEP,
             syscall::SYS_CLOCK_GETTIME,
+            syscall::SYS_OPEN,
+            syscall::SYS_CLOSE,
+            syscall::SYS_STAT,
+            syscall::SYS_FSTAT,
+            syscall::SYS_LSEEK,
+            syscall::SYS_BRK,
+            syscall::SYS_IOCTL,
+            syscall::SYS_DUP2,
+            syscall::SYS_PIPE,
+            syscall::SYS_FORK,
+            syscall::SYS_EXEC,
+            syscall::SYS_WAIT,
+            syscall::SYS_FCNTL,
+            syscall::SYS_POLL,
         ];
         for s in shared {
-            assert!(
-                s.0 < 0x0100,
-                "Shared syscall {:#x} out of range",
-                s.0
-            );
+            assert!(s.0 < 0x0100, "Shared syscall {:#x} out of range", s.0);
         }
     }
 
@@ -522,7 +542,12 @@ mod tests {
         ];
         // Each capability must be a single bit
         for c in &caps {
-            assert_eq!(c.0.count_ones(), 1, "Capability {:#x} is not a single bit", c.0);
+            assert_eq!(
+                c.0.count_ones(),
+                1,
+                "Capability {:#x} is not a single bit",
+                c.0
+            );
         }
         // No duplicates
         for (i, a) in caps.iter().enumerate() {
