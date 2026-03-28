@@ -41,6 +41,7 @@ verify_file() {
     local src="$1"
     local includes="$2"
     local label="$3"
+    local extra_wp_args="${4:-}"
 
     TOTAL=$((TOTAL + 1))
     echo -n "  [$label] $src ... "
@@ -58,12 +59,14 @@ verify_file() {
         fi
     else
         # Full WP verification with Alt-Ergo
+        # shellcheck disable=SC2086
         if frama-c -wp \
                    -wp-prover alt-ergo \
                    -wp-timeout 30 \
                    -kernel-warn-key annot-error=abort \
                    "-cpp-extra-args=$includes" \
                    -machdep x86_64 \
+                   $extra_wp_args \
                    "$ROOT_DIR/$src" 2>&1; then
             echo -e "${GREEN}OK${NC}"
         else
@@ -91,6 +94,13 @@ echo ""
 echo "=== Bitops ==="
 BITOPS_INCLUDES="-I$ROOT_DIR/bitops/include"
 verify_file "bitops/src/bitmap.c" "$BITOPS_INCLUDES" "bitops"
+
+echo ""
+echo "=== Kfmt ==="
+KFMT_INCLUDES="-I$ROOT_DIR/kfmt/include"
+# Only WP-verify render_unsigned: callback helpers have opaque function pointer
+# calls, and gen_kvprintf/gen_kprintf use va_list which WP cannot reason about.
+verify_file "kfmt/src/kprintf.c" "$KFMT_INCLUDES" "kfmt" "-wp-fct render_unsigned"
 
 echo ""
 echo "=== Alloc ==="
