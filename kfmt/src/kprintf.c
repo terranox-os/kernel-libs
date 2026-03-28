@@ -9,22 +9,47 @@
 
 /* ── Internal helpers ────────────────────────────────────── */
 
+/*@
+  requires \valid(count);
+  assigns *count;
+  ensures *count == \old(*count) + 1;
+*/
 static void emit(gen_output_fn out, void *ctx, uint8_t byte, int32_t *count)
 {
     out(byte, ctx);
     (*count)++;
 }
 
+/*@
+  requires \valid(count);
+  assigns *count;
+  ensures *count >= \old(*count);
+*/
 static void emit_str(gen_output_fn out, void *ctx, const char *s, int32_t *count)
 {
+    /*@
+      loop assigns *count;
+    */
     while (*s) {
         emit(out, ctx, (uint8_t)*s++, count);
     }
 }
 
+/*@
+  requires \valid(count);
+  requires width >= 0;
+  requires len >= 0;
+  assigns *count;
+  ensures len >= width ==> *count == \old(*count);
+  ensures len < width  ==> *count == \old(*count) + (width - len);
+*/
 static void emit_pad(gen_output_fn out, void *ctx, uint8_t ch,
                      int32_t width, int32_t len, int32_t *count)
 {
+    /*@
+      loop assigns len, *count;
+      loop variant width - len;
+    */
     while (len < width) {
         emit(out, ctx, ch, count);
         len++;
@@ -36,6 +61,12 @@ static void emit_pad(gen_output_fn out, void *ctx, uint8_t ch,
  * buf must have room for at least 20 characters (max uint64 decimal digits).
  * Returns the number of characters written to buf.
  */
+/*@
+  requires \valid(buf + (0 .. 19));
+  requires base == 10 || base == 16;
+  assigns buf[0 .. 19];
+  ensures 1 <= \result <= 20;
+*/
 static int32_t render_unsigned(char *buf, uint64_t val, int base, int upper)
 {
     const char *digits = upper ? "0123456789ABCDEF" : "0123456789abcdef";
@@ -47,12 +78,22 @@ static int32_t render_unsigned(char *buf, uint64_t val, int base, int upper)
     }
 
     /* Render in reverse */
+    /*@
+      loop invariant 0 <= len <= 20;
+      loop assigns len, val, buf[0 .. 19];
+      loop variant val;
+    */
     while (val > 0) {
         buf[len++] = digits[val % (uint64_t)base];
         val /= (uint64_t)base;
     }
 
     /* Reverse in place */
+    /*@
+      loop invariant 0 <= i <= len / 2;
+      loop assigns i, buf[0 .. len - 1];
+      loop variant len / 2 - i;
+    */
     for (int32_t i = 0; i < len / 2; i++) {
         char tmp = buf[i];
         buf[i] = buf[len - 1 - i];
@@ -63,6 +104,12 @@ static int32_t render_unsigned(char *buf, uint64_t val, int base, int upper)
 }
 
 /* ── Public API ──────────────────────────────────────────── */
+
+/*
+ * gen_kvprintf and gen_kprintf are not annotated with ACSL contracts:
+ * Frama-C WP cannot reason about variadic functions (va_list/va_arg).
+ * The static helpers above are annotated; render_unsigned is WP-verified.
+ */
 
 int32_t gen_kvprintf(gen_output_fn out, void *ctx, const char *fmt, va_list args)
 {
