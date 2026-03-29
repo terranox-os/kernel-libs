@@ -60,6 +60,12 @@ impl GenResult {
     pub const ERR_BAD_SYSCALL: Self = Self(-96);
     pub const ERR_BAD_HANDLE: Self = Self(-97);
     pub const ERR_SYSCALL_INTERRUPTED: Self = Self(-98);
+    pub const ERR_HANDLE_LIMIT: Self = Self(-99);
+
+    // TerranoxOS I/O extension errors (-35 to -47)
+    pub const ERR_CHANNEL_CLOSED: Self = Self(-35);
+    pub const ERR_DISPLAY_OFFLINE: Self = Self(-36);
+    pub const ERR_GPU_ERROR: Self = Self(-37);
 
     #[inline]
     pub const fn is_ok(self) -> bool {
@@ -105,7 +111,80 @@ impl GenResult {
             -96 => "BAD_SYSCALL",
             -97 => "BAD_HANDLE",
             -98 => "SYSCALL_INTERRUPTED",
+            -99 => "HANDLE_LIMIT",
+            -35 => "CHANNEL_CLOSED",
+            -36 => "DISPLAY_OFFLINE",
+            -37 => "GPU_ERROR",
             _ => "UNKNOWN",
+        }
+    }
+}
+
+/// POSIX errno constants for syscall boundary translation.
+pub mod posix_errno {
+    pub const EPERM: i32 = 1;
+    pub const ENOENT: i32 = 2;
+    pub const ESRCH: i32 = 3;
+    pub const EBADF: i32 = 9;
+    pub const EAGAIN: i32 = 11;
+    pub const ENOMEM: i32 = 12;
+    pub const EACCES: i32 = 13;
+    pub const EFAULT: i32 = 14;
+    pub const EBUSY: i32 = 16;
+    pub const EEXIST: i32 = 17;
+    pub const EINVAL: i32 = 22;
+    pub const EPIPE: i32 = 32;
+    pub const ENOSYS: i32 = 38;
+    pub const ETIMEDOUT: i32 = 110;
+}
+
+impl GenResult {
+    /// Convert a GenResult to a POSIX errno value (0 = success, >0 = error).
+    pub const fn to_errno(self) -> i32 {
+        match self.0 {
+            0 => 0,
+            -1 => posix_errno::EINVAL,      // INVALID_ARG
+            -2 => posix_errno::ENOMEM,       // OUT_OF_MEMORY
+            -3 => posix_errno::ENOENT,       // NOT_FOUND
+            -4 => posix_errno::EEXIST,       // ALREADY_EXISTS
+            -5 => posix_errno::EINVAL,       // BUFFER_TOO_SMALL
+            -6 => posix_errno::ENOSYS,       // NOT_SUPPORTED
+            -7 => posix_errno::EBUSY,        // BUSY
+            -8 => posix_errno::ETIMEDOUT,    // TIMEOUT
+            -9 => posix_errno::EAGAIN,       // INTERRUPTED
+            -10 => posix_errno::EINVAL,      // OVERFLOW
+            -16 => posix_errno::EPERM,       // PERMISSION_DENIED
+            -17 => posix_errno::EACCES,      // ACCESS_VIOLATION
+            -18 => posix_errno::EPERM,       // INVALID_CAPABILITY
+            -32 => posix_errno::EPIPE,       // IO
+            -34 => posix_errno::EFAULT,      // BAD_ADDRESS
+            -35 => posix_errno::EPIPE,       // CHANNEL_CLOSED
+            -96 => posix_errno::ENOSYS,      // BAD_SYSCALL
+            -97 => posix_errno::EBADF,       // BAD_HANDLE
+            -98 => posix_errno::EAGAIN,      // SYSCALL_INTERRUPTED
+            _ => posix_errno::EINVAL,
+        }
+    }
+
+    /// Convert a POSIX errno value to a GenResult.
+    pub const fn from_errno(e: i32) -> Self {
+        match e {
+            0 => Self::OK,
+            1 => Self::ERR_PERMISSION_DENIED,     // EPERM
+            2 => Self::ERR_NOT_FOUND,              // ENOENT
+            3 => Self::ERR_NOT_FOUND,              // ESRCH
+            9 => Self::ERR_BAD_HANDLE,             // EBADF
+            11 => Self::ERR_INTERRUPTED,           // EAGAIN
+            12 => Self::ERR_OUT_OF_MEMORY,         // ENOMEM
+            13 => Self::ERR_ACCESS_VIOLATION,      // EACCES
+            14 => Self::ERR_BAD_ADDRESS,           // EFAULT
+            16 => Self::ERR_BUSY,                  // EBUSY
+            17 => Self::ERR_ALREADY_EXISTS,        // EEXIST
+            22 => Self::ERR_INVALID_ARG,           // EINVAL
+            32 => Self::ERR_CHANNEL_CLOSED,        // EPIPE
+            38 => Self::ERR_BAD_SYSCALL,           // ENOSYS
+            110 => Self::ERR_TIMEOUT,              // ETIMEDOUT
+            _ => Self::ERR_NOT_SUPPORTED,
         }
     }
 }
@@ -645,6 +724,10 @@ mod tests {
             GenResult::ERR_BAD_SYSCALL,
             GenResult::ERR_BAD_HANDLE,
             GenResult::ERR_SYSCALL_INTERRUPTED,
+            GenResult::ERR_HANDLE_LIMIT,
+            GenResult::ERR_CHANNEL_CLOSED,
+            GenResult::ERR_DISPLAY_OFFLINE,
+            GenResult::ERR_GPU_ERROR,
         ];
         for e in errors {
             assert!(e.is_error(), "Expected error for code {}", e.0);
@@ -685,6 +768,10 @@ mod tests {
             GenResult::ERR_BAD_SYSCALL.0,
             GenResult::ERR_BAD_HANDLE.0,
             GenResult::ERR_SYSCALL_INTERRUPTED.0,
+            GenResult::ERR_HANDLE_LIMIT.0,
+            GenResult::ERR_CHANNEL_CLOSED.0,
+            GenResult::ERR_DISPLAY_OFFLINE.0,
+            GenResult::ERR_GPU_ERROR.0,
         ];
         for (i, &a) in codes.iter().enumerate() {
             for &b in &codes[i + 1..] {
@@ -696,6 +783,58 @@ mod tests {
     #[test]
     fn gen_result_size() {
         assert_eq!(mem::size_of::<GenResult>(), 4);
+    }
+
+    // -- Errno mapping tests --
+
+    #[test]
+    fn errno_ok_maps_to_zero() {
+        assert_eq!(GenResult::OK.to_errno(), 0);
+        assert_eq!(GenResult::from_errno(0), GenResult::OK);
+    }
+
+    #[test]
+    fn errno_round_trip_mapped_values() {
+        // (GenResult, expected errno)
+        let mappings: &[(GenResult, i32)] = &[
+            (GenResult::ERR_INVALID_ARG, posix_errno::EINVAL),
+            (GenResult::ERR_OUT_OF_MEMORY, posix_errno::ENOMEM),
+            (GenResult::ERR_NOT_FOUND, posix_errno::ENOENT),
+            (GenResult::ERR_ALREADY_EXISTS, posix_errno::EEXIST),
+            (GenResult::ERR_BUSY, posix_errno::EBUSY),
+            (GenResult::ERR_TIMEOUT, posix_errno::ETIMEDOUT),
+            (GenResult::ERR_PERMISSION_DENIED, posix_errno::EPERM),
+            (GenResult::ERR_ACCESS_VIOLATION, posix_errno::EACCES),
+            (GenResult::ERR_BAD_ADDRESS, posix_errno::EFAULT),
+            (GenResult::ERR_BAD_SYSCALL, posix_errno::ENOSYS),
+            (GenResult::ERR_BAD_HANDLE, posix_errno::EBADF),
+            (GenResult::ERR_CHANNEL_CLOSED, posix_errno::EPIPE),
+        ];
+        for &(result, expected_errno) in mappings {
+            assert_eq!(
+                result.to_errno(),
+                expected_errno,
+                "to_errno failed for {:?}",
+                result
+            );
+        }
+    }
+
+    #[test]
+    fn errno_from_errno_known_values() {
+        assert_eq!(GenResult::from_errno(posix_errno::EINVAL), GenResult::ERR_INVALID_ARG);
+        assert_eq!(GenResult::from_errno(posix_errno::ENOMEM), GenResult::ERR_OUT_OF_MEMORY);
+        assert_eq!(GenResult::from_errno(posix_errno::EPERM), GenResult::ERR_PERMISSION_DENIED);
+        assert_eq!(GenResult::from_errno(posix_errno::EBADF), GenResult::ERR_BAD_HANDLE);
+        assert_eq!(GenResult::from_errno(posix_errno::ETIMEDOUT), GenResult::ERR_TIMEOUT);
+    }
+
+    #[test]
+    fn errno_unknown_returns_sentinel() {
+        // Unknown errno maps to NOT_SUPPORTED
+        assert_eq!(GenResult::from_errno(999), GenResult::ERR_NOT_SUPPORTED);
+        // Unknown GenResult maps to EINVAL
+        assert_eq!(GenResult(i32::MIN).to_errno(), posix_errno::EINVAL);
     }
 
     // -- GenSyscallNr tests --

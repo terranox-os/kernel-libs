@@ -19,10 +19,14 @@ _Static_assert(GEN_ERR_INVALID_ARG == -1, "GEN_ERR_INVALID_ARG must be -1");
 _Static_assert(GEN_ERR_OUT_OF_MEMORY == -2, "GEN_ERR_OUT_OF_MEMORY must be -2");
 _Static_assert(GEN_ERR_PERMISSION_DENIED == -16, "GEN_ERR_PERMISSION_DENIED must be -16");
 _Static_assert(GEN_ERR_IO == -32, "GEN_ERR_IO must be -32");
+_Static_assert(GEN_ERR_CHANNEL_CLOSED == -35, "GEN_ERR_CHANNEL_CLOSED must be -35");
+_Static_assert(GEN_ERR_DISPLAY_OFFLINE == -36, "GEN_ERR_DISPLAY_OFFLINE must be -36");
+_Static_assert(GEN_ERR_GPU_ERROR == -37, "GEN_ERR_GPU_ERROR must be -37");
 _Static_assert(GEN_ERR_INVALID_FORMAT == -48, "GEN_ERR_INVALID_FORMAT must be -48");
 _Static_assert(GEN_ERR_MODULE_LOAD_FAILED == -64, "GEN_ERR_MODULE_LOAD_FAILED must be -64");
 _Static_assert(GEN_ERR_DEADLINE_MISS == -80, "GEN_ERR_DEADLINE_MISS must be -80");
 _Static_assert(GEN_ERR_BAD_SYSCALL == -96, "GEN_ERR_BAD_SYSCALL must be -96");
+_Static_assert(GEN_ERR_HANDLE_LIMIT == -99, "GEN_ERR_HANDLE_LIMIT must be -99");
 
 /* Syscall range checks */
 _Static_assert(GEN_SYSCALL_SHARED_BASE == 0x0000, "Shared base");
@@ -78,6 +82,13 @@ int main(void)
 
     (void)gen_cap_contains(GEN_CAP_ALL, GEN_CAP_MEM_READ);
     (void)gen_cap_contains(GEN_CAP_NONE, GEN_CAP_MEM_READ);
+
+    /* Exercise errno mapping helpers */
+    if (gen_result_to_errno(GEN_OK) != 0) return 1;
+    if (gen_result_to_errno(GEN_ERR_INVALID_ARG) != GEN_POSIX_EINVAL) return 1;
+    if (gen_result_to_errno(GEN_ERR_BAD_HANDLE) != GEN_POSIX_EBADF) return 1;
+    if (gen_result_from_errno(0) != GEN_OK) return 1;
+    if (gen_result_from_errno(GEN_POSIX_ENOMEM) != GEN_ERR_OUT_OF_MEMORY) return 1;
 
     /* Exercise TrxCapSet helpers */
     TrxCapSet proc = TRX_CAP_PROCESS;

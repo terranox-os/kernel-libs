@@ -80,7 +80,14 @@ typedef int32_t GenResult;
 #define GEN_ERR_BAD_SYSCALL          ((GenResult)-96)
 #define GEN_ERR_BAD_HANDLE           ((GenResult)-97)
 #define GEN_ERR_SYSCALL_INTERRUPTED  ((GenResult)-98)
-/* -99 to -111 reserved for future syscall errors */
+#define GEN_ERR_HANDLE_LIMIT         ((GenResult)-99)
+/* -100 to -111 reserved for future syscall errors */
+
+/* ── TerranoxOS I/O extension errors (-35 to -47) ───────── */
+
+#define GEN_ERR_CHANNEL_CLOSED   ((GenResult)-35)
+#define GEN_ERR_DISPLAY_OFFLINE  ((GenResult)-36)
+#define GEN_ERR_GPU_ERROR        ((GenResult)-37)
 
 /* ── Convenience helpers ─────────────────────────────────── */
 
@@ -120,7 +127,91 @@ static inline const char *gen_result_name(GenResult r)
     case GEN_ERR_BAD_SYSCALL:         return "BAD_SYSCALL";
     case GEN_ERR_BAD_HANDLE:          return "BAD_HANDLE";
     case GEN_ERR_SYSCALL_INTERRUPTED: return "SYSCALL_INTERRUPTED";
+    case GEN_ERR_HANDLE_LIMIT:        return "HANDLE_LIMIT";
+    case GEN_ERR_CHANNEL_CLOSED:      return "CHANNEL_CLOSED";
+    case GEN_ERR_DISPLAY_OFFLINE:     return "DISPLAY_OFFLINE";
+    case GEN_ERR_GPU_ERROR:           return "GPU_ERROR";
     default:                          return "UNKNOWN";
+    }
+}
+
+/* ── POSIX errno mapping (TerranoxOS syscall boundary) ──── */
+
+/*
+ * POSIX errno values used for translation at the syscall interface.
+ * Kernel-internal errors use the gap-based GenResult scheme above;
+ * these constants are only used by gen_result_to_errno() / gen_result_from_errno().
+ */
+#define GEN_POSIX_EPERM      1
+#define GEN_POSIX_ENOENT     2
+#define GEN_POSIX_ESRCH      3
+#define GEN_POSIX_EBADF      9
+#define GEN_POSIX_EAGAIN    11
+#define GEN_POSIX_ENOMEM    12
+#define GEN_POSIX_EACCES    13
+#define GEN_POSIX_EFAULT    14
+#define GEN_POSIX_EBUSY     16
+#define GEN_POSIX_EEXIST    17
+#define GEN_POSIX_EINVAL    22
+#define GEN_POSIX_EPIPE     32
+#define GEN_POSIX_ENOSYS    38
+#define GEN_POSIX_ETIMEDOUT 110
+
+/*@ requires \true;
+    assigns  \nothing;
+    ensures  r == GEN_OK ==> \result == 0;
+    ensures  r != GEN_OK ==> \result > 0;
+*/
+static inline int gen_result_to_errno(GenResult r)
+{
+    switch (r) {
+    case GEN_OK:                      return 0;
+    case GEN_ERR_INVALID_ARG:         return GEN_POSIX_EINVAL;
+    case GEN_ERR_OUT_OF_MEMORY:       return GEN_POSIX_ENOMEM;
+    case GEN_ERR_NOT_FOUND:           return GEN_POSIX_ENOENT;
+    case GEN_ERR_ALREADY_EXISTS:      return GEN_POSIX_EEXIST;
+    case GEN_ERR_BUFFER_TOO_SMALL:    return GEN_POSIX_EINVAL;
+    case GEN_ERR_NOT_SUPPORTED:       return GEN_POSIX_ENOSYS;
+    case GEN_ERR_BUSY:                return GEN_POSIX_EBUSY;
+    case GEN_ERR_TIMEOUT:             return GEN_POSIX_ETIMEDOUT;
+    case GEN_ERR_INTERRUPTED:         return GEN_POSIX_EAGAIN;
+    case GEN_ERR_OVERFLOW:            return GEN_POSIX_EINVAL;
+    case GEN_ERR_PERMISSION_DENIED:   return GEN_POSIX_EPERM;
+    case GEN_ERR_ACCESS_VIOLATION:    return GEN_POSIX_EACCES;
+    case GEN_ERR_INVALID_CAPABILITY:  return GEN_POSIX_EPERM;
+    case GEN_ERR_IO:                  return GEN_POSIX_EPIPE;
+    case GEN_ERR_BAD_ADDRESS:         return GEN_POSIX_EFAULT;
+    case GEN_ERR_BAD_SYSCALL:         return GEN_POSIX_ENOSYS;
+    case GEN_ERR_BAD_HANDLE:          return GEN_POSIX_EBADF;
+    case GEN_ERR_SYSCALL_INTERRUPTED: return GEN_POSIX_EAGAIN;
+    case GEN_ERR_CHANNEL_CLOSED:      return GEN_POSIX_EPIPE;
+    default:                          return GEN_POSIX_EINVAL;
+    }
+}
+
+/*@ requires \true;
+    assigns  \nothing;
+    ensures  e == 0 ==> \result == GEN_OK;
+*/
+static inline GenResult gen_result_from_errno(int e)
+{
+    switch (e) {
+    case 0:                  return GEN_OK;
+    case GEN_POSIX_EPERM:    return GEN_ERR_PERMISSION_DENIED;
+    case GEN_POSIX_ENOENT:   return GEN_ERR_NOT_FOUND;
+    case GEN_POSIX_ESRCH:    return GEN_ERR_NOT_FOUND;
+    case GEN_POSIX_EBADF:    return GEN_ERR_BAD_HANDLE;
+    case GEN_POSIX_EAGAIN:   return GEN_ERR_INTERRUPTED;
+    case GEN_POSIX_ENOMEM:   return GEN_ERR_OUT_OF_MEMORY;
+    case GEN_POSIX_EACCES:   return GEN_ERR_ACCESS_VIOLATION;
+    case GEN_POSIX_EFAULT:   return GEN_ERR_BAD_ADDRESS;
+    case GEN_POSIX_EBUSY:    return GEN_ERR_BUSY;
+    case GEN_POSIX_EEXIST:   return GEN_ERR_ALREADY_EXISTS;
+    case GEN_POSIX_EINVAL:   return GEN_ERR_INVALID_ARG;
+    case GEN_POSIX_EPIPE:    return GEN_ERR_CHANNEL_CLOSED;
+    case GEN_POSIX_ENOSYS:   return GEN_ERR_BAD_SYSCALL;
+    case GEN_POSIX_ETIMEDOUT:return GEN_ERR_TIMEOUT;
+    default:                 return GEN_ERR_NOT_SUPPORTED;
     }
 }
 
