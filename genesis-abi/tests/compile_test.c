@@ -6,6 +6,7 @@
 #include "genesis_result.h"
 #include "genesis_syscall.h"
 #include "genesis_module.h"
+#include "genesis_trx_types.h"
 
 /* Type size checks */
 _Static_assert(sizeof(GenResult) == 4, "GenResult must be 4 bytes");
@@ -48,6 +49,18 @@ _Static_assert(GEN_CAP_CRYPTO == (1ULL << 15), "CRYPTO bit");
 
 /* TrxCapSet size check */
 _Static_assert(sizeof(TrxCapSet) == 16, "TrxCapSet must be 16 bytes");
+
+/* TerranoxOS data structure size checks */
+_Static_assert(sizeof(GenTrxCapToken) == 16, "GenTrxCapToken must be 16 bytes");
+_Static_assert(sizeof(GenTrxCapTokenSet) == 8, "GenTrxCapTokenSet header must be 8 bytes");
+_Static_assert(sizeof(GenTrxProcessInfo) == 40, "GenTrxProcessInfo must be 40 bytes");
+_Static_assert(sizeof(GenTrxDisplayInfo) == 56, "GenTrxDisplayInfo must be 56 bytes");
+_Static_assert(sizeof(GenTrxInputEvent) == 24, "GenTrxInputEvent must be 24 bytes");
+_Static_assert(sizeof(GenTrxTouchEvent) == 32, "GenTrxTouchEvent must be 32 bytes");
+_Static_assert(sizeof(GenTrxWaitItem) == 16, "GenTrxWaitItem must be 16 bytes");
+_Static_assert(sizeof(GenTrxTimespec) == 16, "GenTrxTimespec must be 16 bytes");
+_Static_assert(sizeof(GenTrxGpuInfo) == 88, "GenTrxGpuInfo must be 88 bytes");
+_Static_assert(sizeof(GenTrxAuditEntry) == 48, "GenTrxAuditEntry must be 48 bytes");
 
 int main(void)
 {

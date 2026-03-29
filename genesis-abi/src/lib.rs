@@ -408,6 +408,118 @@ impl TrxCapSet {
     }
 }
 
+// ────────────────────────────────────────────────────────────
+// TerranoxOS syscall data structures — mirrors genesis_trx_types.h
+// ────────────────────────────────────────────────────────────
+
+/// Transferable capability handle used at the syscall interface.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxCapToken {
+    pub id: u64,
+    pub rights: u64,
+}
+
+/// Header for a variable-length array of capability tokens.
+/// `count` GenTrxCapToken entries follow immediately in memory.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxCapTokenSet {
+    pub count: u32,
+    pub _pad0: u32,
+}
+
+/// Process metadata returned by `trx_process_info`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxProcessInfo {
+    pub pid: i64,
+    pub state: i32,
+    pub thread_count: u32,
+    pub memory_bytes: u64,
+    pub cpu_time_ns: u64,
+    pub cap_count: u32,
+    pub _pad0: u32,
+}
+
+/// Display information returned by `trx_display_enumerate`.
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+pub struct GenTrxDisplayInfo {
+    pub display_id: u32,
+    pub width_px: u32,
+    pub height_px: u32,
+    pub refresh_mhz: u32,
+    pub connector: u32,
+    pub name: [u8; 32],
+    pub _pad0: u32,
+}
+
+/// Input event (libinput-compatible layout).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxInputEvent {
+    pub timestamp_ns: u64,
+    pub r#type: u32,
+    pub code: u32,
+    pub value: i32,
+    pub device_id: u32,
+}
+
+/// Multi-touch event.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxTouchEvent {
+    pub timestamp_ns: u64,
+    pub slot: u32,
+    pub r#type: u32,
+    pub x: i32,
+    pub y: i32,
+    pub pressure: i32,
+    pub _pad0: u32,
+}
+
+/// Wait item for `trx_event_wait_many`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxWaitItem {
+    pub handle: i64,
+    pub events: u32,
+    pub observed: u32,
+}
+
+/// POSIX-compatible timespec.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxTimespec {
+    pub tv_sec: i64,
+    pub tv_nsec: i64,
+}
+
+/// GPU capabilities information.
+#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+pub struct GenTrxGpuInfo {
+    pub vendor_id: u32,
+    pub device_id: u32,
+    pub vram_bytes: u64,
+    pub max_texture_size: u32,
+    pub supported_formats: u32,
+    pub driver_name: [u8; 64],
+}
+
+/// Capability audit log entry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxAuditEntry {
+    pub timestamp_ns: u64,
+    pub pid: i64,
+    pub tid: i64,
+    pub capability: GenTrxCapToken,
+    pub syscall_nr: u32,
+    pub result: u32,
+}
+
 pub const MODULE_NAME_MAX: usize = 64;
 pub const MODULE_MAGIC: u32 = 0x47454E4D;
 pub const MODULE_SECTION: &str = ".gen_module";
@@ -998,6 +1110,67 @@ mod tests {
 
         let just_mem = proc_mem.difference(trx_cap::PROCESS);
         assert_eq!(just_mem, trx_cap::MEMORY);
+    }
+
+    // -- TerranoxOS data structure tests --
+
+    #[test]
+    fn trx_cap_token_size() {
+        assert_eq!(mem::size_of::<GenTrxCapToken>(), 16);
+    }
+
+    #[test]
+    fn trx_cap_token_set_header_size() {
+        assert_eq!(mem::size_of::<GenTrxCapTokenSet>(), 8);
+    }
+
+    #[test]
+    fn trx_process_info_size() {
+        assert_eq!(mem::size_of::<GenTrxProcessInfo>(), 40);
+    }
+
+    #[test]
+    fn trx_display_info_size() {
+        assert_eq!(mem::size_of::<GenTrxDisplayInfo>(), 56);
+    }
+
+    #[test]
+    fn trx_input_event_size() {
+        assert_eq!(mem::size_of::<GenTrxInputEvent>(), 24);
+    }
+
+    #[test]
+    fn trx_touch_event_size() {
+        assert_eq!(mem::size_of::<GenTrxTouchEvent>(), 32);
+    }
+
+    #[test]
+    fn trx_wait_item_size() {
+        assert_eq!(mem::size_of::<GenTrxWaitItem>(), 16);
+    }
+
+    #[test]
+    fn trx_timespec_size() {
+        assert_eq!(mem::size_of::<GenTrxTimespec>(), 16);
+    }
+
+    #[test]
+    fn trx_gpu_info_size() {
+        assert_eq!(mem::size_of::<GenTrxGpuInfo>(), 88);
+    }
+
+    #[test]
+    fn trx_audit_entry_size() {
+        assert_eq!(mem::size_of::<GenTrxAuditEntry>(), 48);
+    }
+
+    #[test]
+    fn trx_structs_alignment() {
+        assert!(mem::align_of::<GenTrxCapToken>() >= 8);
+        assert!(mem::align_of::<GenTrxProcessInfo>() >= 8);
+        assert!(mem::align_of::<GenTrxWaitItem>() >= 4);
+        assert!(mem::align_of::<GenTrxTimespec>() >= 8);
+        assert!(mem::align_of::<GenTrxAuditEntry>() >= 8);
     }
 
     #[test]

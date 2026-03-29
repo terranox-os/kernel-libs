@@ -11,6 +11,7 @@ cc_library(
         "include/genesis_module.h",
         "include/genesis_result.h",
         "include/genesis_syscall.h",
+        "include/genesis_trx_types.h",
     ],
     includes = ["include"],
     copts = [
