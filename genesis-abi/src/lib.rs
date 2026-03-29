@@ -143,25 +143,25 @@ impl GenResult {
     pub const fn to_errno(self) -> i32 {
         match self.0 {
             0 => 0,
-            -1 => posix_errno::EINVAL,      // INVALID_ARG
-            -2 => posix_errno::ENOMEM,       // OUT_OF_MEMORY
-            -3 => posix_errno::ENOENT,       // NOT_FOUND
-            -4 => posix_errno::EEXIST,       // ALREADY_EXISTS
-            -5 => posix_errno::EINVAL,       // BUFFER_TOO_SMALL
-            -6 => posix_errno::ENOSYS,       // NOT_SUPPORTED
-            -7 => posix_errno::EBUSY,        // BUSY
-            -8 => posix_errno::ETIMEDOUT,    // TIMEOUT
-            -9 => posix_errno::EAGAIN,       // INTERRUPTED
-            -10 => posix_errno::EINVAL,      // OVERFLOW
-            -16 => posix_errno::EPERM,       // PERMISSION_DENIED
-            -17 => posix_errno::EACCES,      // ACCESS_VIOLATION
-            -18 => posix_errno::EPERM,       // INVALID_CAPABILITY
-            -32 => posix_errno::EPIPE,       // IO
-            -34 => posix_errno::EFAULT,      // BAD_ADDRESS
-            -35 => posix_errno::EPIPE,       // CHANNEL_CLOSED
-            -96 => posix_errno::ENOSYS,      // BAD_SYSCALL
-            -97 => posix_errno::EBADF,       // BAD_HANDLE
-            -98 => posix_errno::EAGAIN,      // SYSCALL_INTERRUPTED
+            -1 => posix_errno::EINVAL,    // INVALID_ARG
+            -2 => posix_errno::ENOMEM,    // OUT_OF_MEMORY
+            -3 => posix_errno::ENOENT,    // NOT_FOUND
+            -4 => posix_errno::EEXIST,    // ALREADY_EXISTS
+            -5 => posix_errno::EINVAL,    // BUFFER_TOO_SMALL
+            -6 => posix_errno::ENOSYS,    // NOT_SUPPORTED
+            -7 => posix_errno::EBUSY,     // BUSY
+            -8 => posix_errno::ETIMEDOUT, // TIMEOUT
+            -9 => posix_errno::EAGAIN,    // INTERRUPTED
+            -10 => posix_errno::EINVAL,   // OVERFLOW
+            -16 => posix_errno::EPERM,    // PERMISSION_DENIED
+            -17 => posix_errno::EACCES,   // ACCESS_VIOLATION
+            -18 => posix_errno::EPERM,    // INVALID_CAPABILITY
+            -32 => posix_errno::EPIPE,    // IO
+            -34 => posix_errno::EFAULT,   // BAD_ADDRESS
+            -35 => posix_errno::EPIPE,    // CHANNEL_CLOSED
+            -96 => posix_errno::ENOSYS,   // BAD_SYSCALL
+            -97 => posix_errno::EBADF,    // BAD_HANDLE
+            -98 => posix_errno::EAGAIN,   // SYSCALL_INTERRUPTED
             _ => posix_errno::EINVAL,
         }
     }
@@ -170,20 +170,20 @@ impl GenResult {
     pub const fn from_errno(e: i32) -> Self {
         match e {
             0 => Self::OK,
-            1 => Self::ERR_PERMISSION_DENIED,     // EPERM
-            2 => Self::ERR_NOT_FOUND,              // ENOENT
-            3 => Self::ERR_NOT_FOUND,              // ESRCH
-            9 => Self::ERR_BAD_HANDLE,             // EBADF
-            11 => Self::ERR_INTERRUPTED,           // EAGAIN
-            12 => Self::ERR_OUT_OF_MEMORY,         // ENOMEM
-            13 => Self::ERR_ACCESS_VIOLATION,      // EACCES
-            14 => Self::ERR_BAD_ADDRESS,           // EFAULT
-            16 => Self::ERR_BUSY,                  // EBUSY
-            17 => Self::ERR_ALREADY_EXISTS,        // EEXIST
-            22 => Self::ERR_INVALID_ARG,           // EINVAL
-            32 => Self::ERR_CHANNEL_CLOSED,        // EPIPE
-            38 => Self::ERR_BAD_SYSCALL,           // ENOSYS
-            110 => Self::ERR_TIMEOUT,              // ETIMEDOUT
+            1 => Self::ERR_PERMISSION_DENIED, // EPERM
+            2 => Self::ERR_NOT_FOUND,         // ENOENT
+            3 => Self::ERR_NOT_FOUND,         // ESRCH
+            9 => Self::ERR_BAD_HANDLE,        // EBADF
+            11 => Self::ERR_INTERRUPTED,      // EAGAIN
+            12 => Self::ERR_OUT_OF_MEMORY,    // ENOMEM
+            13 => Self::ERR_ACCESS_VIOLATION, // EACCES
+            14 => Self::ERR_BAD_ADDRESS,      // EFAULT
+            16 => Self::ERR_BUSY,             // EBUSY
+            17 => Self::ERR_ALREADY_EXISTS,   // EEXIST
+            22 => Self::ERR_INVALID_ARG,      // EINVAL
+            32 => Self::ERR_CHANNEL_CLOSED,   // EPIPE
+            38 => Self::ERR_BAD_SYSCALL,      // ENOSYS
+            110 => Self::ERR_TIMEOUT,         // ETIMEDOUT
             _ => Self::ERR_NOT_SUPPORTED,
         }
     }
@@ -519,20 +519,29 @@ pub mod trx_cap {
     pub const IO_PORT: TrxCapSet = TrxCapSet { lo: 1 << 18, hi: 0 };
     pub const IO_IRQ: TrxCapSet = TrxCapSet { lo: 1 << 19, hi: 0 };
     pub const IO_MMIO: TrxCapSet = TrxCapSet { lo: 1 << 20, hi: 0 };
-    pub const IO: TrxCapSet = TrxCapSet { lo: 0x1C_0000, hi: 0 };
+    pub const IO: TrxCapSet = TrxCapSet {
+        lo: 0x1C_0000,
+        hi: 0,
+    };
 
     // ── display domain (lo bits 21-24) ──
     pub const DISPLAY_COMPOSITOR: TrxCapSet = TrxCapSet { lo: 1 << 21, hi: 0 };
     pub const DISPLAY_SURFACE: TrxCapSet = TrxCapSet { lo: 1 << 22, hi: 0 };
     pub const DISPLAY_BUFFER: TrxCapSet = TrxCapSet { lo: 1 << 23, hi: 0 };
     pub const DISPLAY_MODE: TrxCapSet = TrxCapSet { lo: 1 << 24, hi: 0 };
-    pub const DISPLAY: TrxCapSet = TrxCapSet { lo: 0x1E0_0000, hi: 0 };
+    pub const DISPLAY: TrxCapSet = TrxCapSet {
+        lo: 0x1E0_0000,
+        hi: 0,
+    };
 
     // ── input domain (lo bits 25-27) ──
     pub const INPUT_KEYBOARD: TrxCapSet = TrxCapSet { lo: 1 << 25, hi: 0 };
     pub const INPUT_POINTER: TrxCapSet = TrxCapSet { lo: 1 << 26, hi: 0 };
     pub const INPUT_TOUCH: TrxCapSet = TrxCapSet { lo: 1 << 27, hi: 0 };
-    pub const INPUT: TrxCapSet = TrxCapSet { lo: 0xE00_0000, hi: 0 };
+    pub const INPUT: TrxCapSet = TrxCapSet {
+        lo: 0xE00_0000,
+        hi: 0,
+    };
 
     // ── gpu domain (hi bits 0-2) ──
     pub const GPU_RENDER: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 0 };
@@ -560,7 +569,10 @@ pub mod trx_cap {
 
     // ── aggregate constants ──
     pub const NONE: TrxCapSet = TrxCapSet { lo: 0, hi: 0 };
-    pub const ROOT: TrxCapSet = TrxCapSet { lo: 0xFFF_FFFF, hi: 0xFFF };
+    pub const ROOT: TrxCapSet = TrxCapSet {
+        lo: 0xFFF_FFFF,
+        hi: 0xFFF,
+    };
 }
 
 impl TrxCapSet {
@@ -939,11 +951,26 @@ mod tests {
 
     #[test]
     fn errno_from_errno_known_values() {
-        assert_eq!(GenResult::from_errno(posix_errno::EINVAL), GenResult::ERR_INVALID_ARG);
-        assert_eq!(GenResult::from_errno(posix_errno::ENOMEM), GenResult::ERR_OUT_OF_MEMORY);
-        assert_eq!(GenResult::from_errno(posix_errno::EPERM), GenResult::ERR_PERMISSION_DENIED);
-        assert_eq!(GenResult::from_errno(posix_errno::EBADF), GenResult::ERR_BAD_HANDLE);
-        assert_eq!(GenResult::from_errno(posix_errno::ETIMEDOUT), GenResult::ERR_TIMEOUT);
+        assert_eq!(
+            GenResult::from_errno(posix_errno::EINVAL),
+            GenResult::ERR_INVALID_ARG
+        );
+        assert_eq!(
+            GenResult::from_errno(posix_errno::ENOMEM),
+            GenResult::ERR_OUT_OF_MEMORY
+        );
+        assert_eq!(
+            GenResult::from_errno(posix_errno::EPERM),
+            GenResult::ERR_PERMISSION_DENIED
+        );
+        assert_eq!(
+            GenResult::from_errno(posix_errno::EBADF),
+            GenResult::ERR_BAD_HANDLE
+        );
+        assert_eq!(
+            GenResult::from_errno(posix_errno::ETIMEDOUT),
+            GenResult::ERR_TIMEOUT
+        );
     }
 
     #[test]
@@ -994,60 +1021,99 @@ mod tests {
     fn trx_syscall_all_in_range() {
         let trx_syscalls = [
             // Process
-            syscall::SYS_TRX_PROCESS_CREATE, syscall::SYS_TRX_PROCESS_KILL,
-            syscall::SYS_TRX_PROCESS_INFO, syscall::SYS_TRX_PROCESS_CAP_GRANT,
-            syscall::SYS_TRX_PROCESS_CAP_REVOKE, syscall::SYS_TRX_PROCESS_CAP_QUERY,
+            syscall::SYS_TRX_PROCESS_CREATE,
+            syscall::SYS_TRX_PROCESS_KILL,
+            syscall::SYS_TRX_PROCESS_INFO,
+            syscall::SYS_TRX_PROCESS_CAP_GRANT,
+            syscall::SYS_TRX_PROCESS_CAP_REVOKE,
+            syscall::SYS_TRX_PROCESS_CAP_QUERY,
             // Thread
-            syscall::SYS_TRX_THREAD_CREATE, syscall::SYS_TRX_THREAD_EXIT,
-            syscall::SYS_TRX_THREAD_JOIN, syscall::SYS_TRX_THREAD_SET_AFFINITY,
-            syscall::SYS_TRX_THREAD_GET_AFFINITY, syscall::SYS_TRX_THREAD_SET_NAME,
-            syscall::SYS_TRX_FUTEX_WAIT, syscall::SYS_TRX_FUTEX_WAKE,
+            syscall::SYS_TRX_THREAD_CREATE,
+            syscall::SYS_TRX_THREAD_EXIT,
+            syscall::SYS_TRX_THREAD_JOIN,
+            syscall::SYS_TRX_THREAD_SET_AFFINITY,
+            syscall::SYS_TRX_THREAD_GET_AFFINITY,
+            syscall::SYS_TRX_THREAD_SET_NAME,
+            syscall::SYS_TRX_FUTEX_WAIT,
+            syscall::SYS_TRX_FUTEX_WAKE,
             // Memory
-            syscall::SYS_TRX_MEM_PROTECT, syscall::SYS_TRX_MEM_MAP,
-            syscall::SYS_TRX_MEM_UNMAP, syscall::SYS_TRX_MEM_SHARE_CREATE,
-            syscall::SYS_TRX_MEM_SHARE_MAP, syscall::SYS_TRX_MEM_SHARE_UNMAP,
-            syscall::SYS_TRX_MEM_DMA_ALLOC, syscall::SYS_TRX_MEM_DMA_FREE,
+            syscall::SYS_TRX_MEM_PROTECT,
+            syscall::SYS_TRX_MEM_MAP,
+            syscall::SYS_TRX_MEM_UNMAP,
+            syscall::SYS_TRX_MEM_SHARE_CREATE,
+            syscall::SYS_TRX_MEM_SHARE_MAP,
+            syscall::SYS_TRX_MEM_SHARE_UNMAP,
+            syscall::SYS_TRX_MEM_DMA_ALLOC,
+            syscall::SYS_TRX_MEM_DMA_FREE,
             // IPC
-            syscall::SYS_TRX_CHANNEL_CREATE, syscall::SYS_TRX_CHANNEL_SEND,
-            syscall::SYS_TRX_CHANNEL_RECV, syscall::SYS_TRX_CHANNEL_CLOSE,
-            syscall::SYS_TRX_CHANNEL_POLL, syscall::SYS_TRX_SIGNAL_CREATE,
-            syscall::SYS_TRX_SIGNAL_RAISE, syscall::SYS_TRX_SIGNAL_WAIT,
-            syscall::SYS_TRX_SIGNAL_CLEAR, syscall::SYS_TRX_EVENT_WAIT_MANY,
+            syscall::SYS_TRX_CHANNEL_CREATE,
+            syscall::SYS_TRX_CHANNEL_SEND,
+            syscall::SYS_TRX_CHANNEL_RECV,
+            syscall::SYS_TRX_CHANNEL_CLOSE,
+            syscall::SYS_TRX_CHANNEL_POLL,
+            syscall::SYS_TRX_SIGNAL_CREATE,
+            syscall::SYS_TRX_SIGNAL_RAISE,
+            syscall::SYS_TRX_SIGNAL_WAIT,
+            syscall::SYS_TRX_SIGNAL_CLEAR,
+            syscall::SYS_TRX_EVENT_WAIT_MANY,
             // FS
-            syscall::SYS_TRX_FS_MKDIR, syscall::SYS_TRX_FS_UNLINK,
+            syscall::SYS_TRX_FS_MKDIR,
+            syscall::SYS_TRX_FS_UNLINK,
             syscall::SYS_TRX_FS_RENAME,
             // Display
-            syscall::SYS_TRX_DISPLAY_ENUMERATE, syscall::SYS_TRX_DISPLAY_SET_MODE,
-            syscall::SYS_TRX_COMPOSITOR_CREATE, syscall::SYS_TRX_COMPOSITOR_PRESENT,
-            syscall::SYS_TRX_SURFACE_CREATE, syscall::SYS_TRX_SURFACE_DESTROY,
-            syscall::SYS_TRX_SURFACE_RESIZE, syscall::SYS_TRX_BUFFER_CREATE,
-            syscall::SYS_TRX_BUFFER_MAP, syscall::SYS_TRX_BUFFER_UNMAP,
+            syscall::SYS_TRX_DISPLAY_ENUMERATE,
+            syscall::SYS_TRX_DISPLAY_SET_MODE,
+            syscall::SYS_TRX_COMPOSITOR_CREATE,
+            syscall::SYS_TRX_COMPOSITOR_PRESENT,
+            syscall::SYS_TRX_SURFACE_CREATE,
+            syscall::SYS_TRX_SURFACE_DESTROY,
+            syscall::SYS_TRX_SURFACE_RESIZE,
+            syscall::SYS_TRX_BUFFER_CREATE,
+            syscall::SYS_TRX_BUFFER_MAP,
+            syscall::SYS_TRX_BUFFER_UNMAP,
             // Input
-            syscall::SYS_TRX_INPUT_ENUMERATE, syscall::SYS_TRX_INPUT_OPEN,
-            syscall::SYS_TRX_INPUT_CLOSE, syscall::SYS_TRX_INPUT_READ_EVENTS,
-            syscall::SYS_TRX_INPUT_GRAB, syscall::SYS_TRX_INPUT_UNGRAB,
-            syscall::SYS_TRX_INPUT_SET_KEYMAP, syscall::SYS_TRX_TOUCH_READ_EVENTS,
+            syscall::SYS_TRX_INPUT_ENUMERATE,
+            syscall::SYS_TRX_INPUT_OPEN,
+            syscall::SYS_TRX_INPUT_CLOSE,
+            syscall::SYS_TRX_INPUT_READ_EVENTS,
+            syscall::SYS_TRX_INPUT_GRAB,
+            syscall::SYS_TRX_INPUT_UNGRAB,
+            syscall::SYS_TRX_INPUT_SET_KEYMAP,
+            syscall::SYS_TRX_TOUCH_READ_EVENTS,
             syscall::SYS_TRX_INPUT_SET_ACCEL,
             // GPU
-            syscall::SYS_TRX_GPU_OPEN, syscall::SYS_TRX_GPU_CLOSE,
-            syscall::SYS_TRX_GPU_ALLOC_BO, syscall::SYS_TRX_GPU_FREE_BO,
-            syscall::SYS_TRX_GPU_MAP_BO, syscall::SYS_TRX_GPU_SUBMIT,
-            syscall::SYS_TRX_GPU_WAIT_FENCE, syscall::SYS_TRX_GPU_EXPORT_DMABUF,
-            syscall::SYS_TRX_GPU_IMPORT_DMABUF, syscall::SYS_TRX_GPU_GET_INFO,
+            syscall::SYS_TRX_GPU_OPEN,
+            syscall::SYS_TRX_GPU_CLOSE,
+            syscall::SYS_TRX_GPU_ALLOC_BO,
+            syscall::SYS_TRX_GPU_FREE_BO,
+            syscall::SYS_TRX_GPU_MAP_BO,
+            syscall::SYS_TRX_GPU_SUBMIT,
+            syscall::SYS_TRX_GPU_WAIT_FENCE,
+            syscall::SYS_TRX_GPU_EXPORT_DMABUF,
+            syscall::SYS_TRX_GPU_IMPORT_DMABUF,
+            syscall::SYS_TRX_GPU_GET_INFO,
             // Net
-            syscall::SYS_TRX_NET_SOCKET, syscall::SYS_TRX_NET_BIND,
-            syscall::SYS_TRX_NET_LISTEN, syscall::SYS_TRX_NET_ACCEPT,
-            syscall::SYS_TRX_NET_CONNECT, syscall::SYS_TRX_NET_SENDMSG,
+            syscall::SYS_TRX_NET_SOCKET,
+            syscall::SYS_TRX_NET_BIND,
+            syscall::SYS_TRX_NET_LISTEN,
+            syscall::SYS_TRX_NET_ACCEPT,
+            syscall::SYS_TRX_NET_CONNECT,
+            syscall::SYS_TRX_NET_SENDMSG,
             syscall::SYS_TRX_NET_RECVMSG,
             // Time
-            syscall::SYS_TRX_TIMER_CREATE, syscall::SYS_TRX_TIMER_SET,
+            syscall::SYS_TRX_TIMER_CREATE,
+            syscall::SYS_TRX_TIMER_SET,
             // System
-            syscall::SYS_TRX_SYSTEM_REBOOT, syscall::SYS_TRX_MODULE_LOAD,
-            syscall::SYS_TRX_MODULE_UNLOAD, syscall::SYS_TRX_AUDIT_READ,
+            syscall::SYS_TRX_SYSTEM_REBOOT,
+            syscall::SYS_TRX_MODULE_LOAD,
+            syscall::SYS_TRX_MODULE_UNLOAD,
+            syscall::SYS_TRX_AUDIT_READ,
             syscall::SYS_TRX_AUDIT_SET_POLICY,
             // Sigil/sandbox
-            syscall::SYS_TRX_SIGIL_SIGN, syscall::SYS_TRX_SIGIL_VERIFY,
-            syscall::SYS_TRX_SANDBOX_CREATE, syscall::SYS_TRX_SANDBOX_ENTER,
+            syscall::SYS_TRX_SIGIL_SIGN,
+            syscall::SYS_TRX_SIGIL_VERIFY,
+            syscall::SYS_TRX_SANDBOX_CREATE,
+            syscall::SYS_TRX_SANDBOX_ENTER,
         ];
         for s in trx_syscalls {
             assert!(
@@ -1061,18 +1127,14 @@ mod tests {
     #[test]
     fn trx_syscall_no_duplicates() {
         let trx_nrs: [u32; 82] = [
-            0x0100, 0x0103, 0x0104, 0x0105, 0x0106, 0x0107,
-            0x0110, 0x0111, 0x0112, 0x0114, 0x0115, 0x0116, 0x0117, 0x0118,
-            0x0122, 0x0123, 0x0124, 0x0125, 0x0126, 0x0127, 0x0128, 0x0129,
-            0x0130, 0x0131, 0x0132, 0x0133, 0x0134, 0x0135, 0x0136, 0x0137, 0x0138, 0x0139,
-            0x0147, 0x0148, 0x0149,
-            0x0150, 0x0151, 0x0152, 0x0153, 0x0154, 0x0155, 0x0156, 0x0157, 0x0158, 0x0159,
-            0x0160, 0x0161, 0x0162, 0x0163, 0x0164, 0x0165, 0x0166, 0x0167, 0x0168,
-            0x0170, 0x0171, 0x0172, 0x0173, 0x0174, 0x0175, 0x0176, 0x0177, 0x0178, 0x0179,
-            0x0180, 0x0181, 0x0182, 0x0183, 0x0184, 0x0185, 0x0186,
-            0x0192, 0x0193,
-            0x01A0, 0x01A1, 0x01A2, 0x01A3, 0x01A4,
-            0x01B0, 0x01B1, 0x01B2, 0x01B3,
+            0x0100, 0x0103, 0x0104, 0x0105, 0x0106, 0x0107, 0x0110, 0x0111, 0x0112, 0x0114, 0x0115,
+            0x0116, 0x0117, 0x0118, 0x0122, 0x0123, 0x0124, 0x0125, 0x0126, 0x0127, 0x0128, 0x0129,
+            0x0130, 0x0131, 0x0132, 0x0133, 0x0134, 0x0135, 0x0136, 0x0137, 0x0138, 0x0139, 0x0147,
+            0x0148, 0x0149, 0x0150, 0x0151, 0x0152, 0x0153, 0x0154, 0x0155, 0x0156, 0x0157, 0x0158,
+            0x0159, 0x0160, 0x0161, 0x0162, 0x0163, 0x0164, 0x0165, 0x0166, 0x0167, 0x0168, 0x0170,
+            0x0171, 0x0172, 0x0173, 0x0174, 0x0175, 0x0176, 0x0177, 0x0178, 0x0179, 0x0180, 0x0181,
+            0x0182, 0x0183, 0x0184, 0x0185, 0x0186, 0x0192, 0x0193, 0x01A0, 0x01A1, 0x01A2, 0x01A3,
+            0x01A4, 0x01B0, 0x01B1, 0x01B2, 0x01B3,
         ];
         for (i, &a) in trx_nrs.iter().enumerate() {
             for &b in &trx_nrs[i + 1..] {
@@ -1351,7 +1413,10 @@ mod tests {
             (trx_cap::IO_PORT.lo, trx_cap::IO_PORT.hi),
             (trx_cap::IO_IRQ.lo, trx_cap::IO_IRQ.hi),
             (trx_cap::IO_MMIO.lo, trx_cap::IO_MMIO.hi),
-            (trx_cap::DISPLAY_COMPOSITOR.lo, trx_cap::DISPLAY_COMPOSITOR.hi),
+            (
+                trx_cap::DISPLAY_COMPOSITOR.lo,
+                trx_cap::DISPLAY_COMPOSITOR.hi,
+            ),
             (trx_cap::DISPLAY_SURFACE.lo, trx_cap::DISPLAY_SURFACE.hi),
             (trx_cap::DISPLAY_BUFFER.lo, trx_cap::DISPLAY_BUFFER.hi),
             (trx_cap::DISPLAY_MODE.lo, trx_cap::DISPLAY_MODE.hi),
@@ -1373,11 +1438,7 @@ mod tests {
         ];
         for (i, a) in leaves.iter().enumerate() {
             for b in &leaves[i + 1..] {
-                assert!(
-                    a != b,
-                    "Duplicate leaf cap: lo={:#x} hi={:#x}",
-                    a.0, a.1
-                );
+                assert!(a != b, "Duplicate leaf cap: lo={:#x} hi={:#x}", a.0, a.1);
             }
         }
     }
@@ -1469,7 +1530,12 @@ mod tests {
                 assert!(
                     inter.is_empty(),
                     "Domains overlap: ({:#x},{:#x}) & ({:#x},{:#x}) = ({:#x},{:#x})",
-                    a.lo, a.hi, b.lo, b.hi, inter.lo, inter.hi
+                    a.lo,
+                    a.hi,
+                    b.lo,
+                    b.hi,
+                    inter.lo,
+                    inter.hi
                 );
             }
         }
