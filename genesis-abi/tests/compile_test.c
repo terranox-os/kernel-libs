@@ -46,6 +46,9 @@ _Static_assert(
 _Static_assert(GEN_CAP_MEM_READ == (1ULL << 0), "MEM_READ bit");
 _Static_assert(GEN_CAP_CRYPTO == (1ULL << 15), "CRYPTO bit");
 
+/* TrxCapSet size check */
+_Static_assert(sizeof(TrxCapSet) == 16, "TrxCapSet must be 16 bytes");
+
 int main(void)
 {
     /* Exercise inline helpers to verify they link */
@@ -62,6 +65,27 @@ int main(void)
 
     (void)gen_cap_contains(GEN_CAP_ALL, GEN_CAP_MEM_READ);
     (void)gen_cap_contains(GEN_CAP_NONE, GEN_CAP_MEM_READ);
+
+    /* Exercise TrxCapSet helpers */
+    TrxCapSet proc = TRX_CAP_PROCESS;
+    TrxCapSet proc_create = TRX_CAP_PROCESS_CREATE;
+    (void)trx_cap_contains(proc, proc_create);
+    (void)trx_cap_is_empty(TRX_CAP_NONE);
+
+    TrxCapSet u = trx_cap_union(TRX_CAP_PROCESS, TRX_CAP_MEMORY);
+    TrxCapSet i = trx_cap_intersection(u, TRX_CAP_PROCESS);
+    TrxCapSet d = trx_cap_difference(u, TRX_CAP_PROCESS);
+    (void)u; (void)i; (void)d;
+
+    /* Verify ROOT contains all leaf domains */
+    TrxCapSet root = TRX_CAP_ROOT;
+    if (!trx_cap_contains(root, TRX_CAP_PROCESS)) return 1;
+    if (!trx_cap_contains(root, TRX_CAP_GPU))     return 1;
+    if (!trx_cap_contains(root, TRX_CAP_SYSTEM))  return 1;
+
+    /* Verify NONE is empty */
+    if (!trx_cap_is_empty(TRX_CAP_NONE)) return 1;
+    if (trx_cap_is_empty(TRX_CAP_ROOT))  return 1;
 
     return 0;
 }

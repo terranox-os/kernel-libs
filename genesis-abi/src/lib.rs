@@ -267,6 +267,147 @@ impl GenCapability {
     }
 }
 
+// ────────────────────────────────────────────────────────────
+// TrxCapSet — hierarchical capability model (TerranoxOS)
+// ────────────────────────────────────────────────────────────
+
+/// 128-bit domain-partitioned capability bitmask for TerranoxOS.
+///
+/// Each of 12 capability domains occupies a contiguous bit range.
+/// Parent domain constants are the bitwise OR of all child sub-capabilities.
+/// Hierarchy is resolved at compile time — no runtime graph traversal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(C)]
+pub struct TrxCapSet {
+    pub lo: u64,
+    pub hi: u64,
+}
+
+pub mod trx_cap {
+    use super::TrxCapSet;
+
+    // ── process domain (lo bits 0-3) ──
+    pub const PROCESS_CREATE: TrxCapSet = TrxCapSet { lo: 1 << 0, hi: 0 };
+    pub const PROCESS_SIGNAL: TrxCapSet = TrxCapSet { lo: 1 << 1, hi: 0 };
+    pub const PROCESS_INSPECT: TrxCapSet = TrxCapSet { lo: 1 << 2, hi: 0 };
+    pub const PROCESS_MANAGE: TrxCapSet = TrxCapSet { lo: 1 << 3, hi: 0 };
+    pub const PROCESS: TrxCapSet = TrxCapSet { lo: 0xF, hi: 0 };
+
+    // ── memory domain (lo bits 4-7) ──
+    pub const MEMORY_ALLOC: TrxCapSet = TrxCapSet { lo: 1 << 4, hi: 0 };
+    pub const MEMORY_MAP: TrxCapSet = TrxCapSet { lo: 1 << 5, hi: 0 };
+    pub const MEMORY_SHARE: TrxCapSet = TrxCapSet { lo: 1 << 6, hi: 0 };
+    pub const MEMORY_DMA: TrxCapSet = TrxCapSet { lo: 1 << 7, hi: 0 };
+    pub const MEMORY: TrxCapSet = TrxCapSet { lo: 0xF0, hi: 0 };
+
+    // ── thread domain (lo bits 8-10) ──
+    pub const THREAD_CREATE: TrxCapSet = TrxCapSet { lo: 1 << 8, hi: 0 };
+    pub const THREAD_JOIN: TrxCapSet = TrxCapSet { lo: 1 << 9, hi: 0 };
+    pub const THREAD_AFFINITY: TrxCapSet = TrxCapSet { lo: 1 << 10, hi: 0 };
+    pub const THREAD: TrxCapSet = TrxCapSet { lo: 0x700, hi: 0 };
+
+    // ── ipc domain (lo bits 11-13) ──
+    pub const IPC_CHANNEL: TrxCapSet = TrxCapSet { lo: 1 << 11, hi: 0 };
+    pub const IPC_SIGNAL: TrxCapSet = TrxCapSet { lo: 1 << 12, hi: 0 };
+    pub const IPC_EVENT: TrxCapSet = TrxCapSet { lo: 1 << 13, hi: 0 };
+    pub const IPC: TrxCapSet = TrxCapSet { lo: 0x3800, hi: 0 };
+
+    // ── fs domain (lo bits 14-17) ──
+    pub const FS_READ: TrxCapSet = TrxCapSet { lo: 1 << 14, hi: 0 };
+    pub const FS_WRITE: TrxCapSet = TrxCapSet { lo: 1 << 15, hi: 0 };
+    pub const FS_CREATE: TrxCapSet = TrxCapSet { lo: 1 << 16, hi: 0 };
+    pub const FS_DELETE: TrxCapSet = TrxCapSet { lo: 1 << 17, hi: 0 };
+    pub const FS: TrxCapSet = TrxCapSet { lo: 0x3C000, hi: 0 };
+
+    // ── io domain (lo bits 18-20) ──
+    pub const IO_PORT: TrxCapSet = TrxCapSet { lo: 1 << 18, hi: 0 };
+    pub const IO_IRQ: TrxCapSet = TrxCapSet { lo: 1 << 19, hi: 0 };
+    pub const IO_MMIO: TrxCapSet = TrxCapSet { lo: 1 << 20, hi: 0 };
+    pub const IO: TrxCapSet = TrxCapSet { lo: 0x1C_0000, hi: 0 };
+
+    // ── display domain (lo bits 21-24) ──
+    pub const DISPLAY_COMPOSITOR: TrxCapSet = TrxCapSet { lo: 1 << 21, hi: 0 };
+    pub const DISPLAY_SURFACE: TrxCapSet = TrxCapSet { lo: 1 << 22, hi: 0 };
+    pub const DISPLAY_BUFFER: TrxCapSet = TrxCapSet { lo: 1 << 23, hi: 0 };
+    pub const DISPLAY_MODE: TrxCapSet = TrxCapSet { lo: 1 << 24, hi: 0 };
+    pub const DISPLAY: TrxCapSet = TrxCapSet { lo: 0x1E0_0000, hi: 0 };
+
+    // ── input domain (lo bits 25-27) ──
+    pub const INPUT_KEYBOARD: TrxCapSet = TrxCapSet { lo: 1 << 25, hi: 0 };
+    pub const INPUT_POINTER: TrxCapSet = TrxCapSet { lo: 1 << 26, hi: 0 };
+    pub const INPUT_TOUCH: TrxCapSet = TrxCapSet { lo: 1 << 27, hi: 0 };
+    pub const INPUT: TrxCapSet = TrxCapSet { lo: 0xE00_0000, hi: 0 };
+
+    // ── gpu domain (hi bits 0-2) ──
+    pub const GPU_RENDER: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 0 };
+    pub const GPU_COMPUTE: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 1 };
+    pub const GPU_ALLOC: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 2 };
+    pub const GPU: TrxCapSet = TrxCapSet { lo: 0, hi: 0x7 };
+
+    // ── net domain (hi bits 3-5) ──
+    pub const NET_SOCKET: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 3 };
+    pub const NET_BIND: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 4 };
+    pub const NET_RAW: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 5 };
+    pub const NET: TrxCapSet = TrxCapSet { lo: 0, hi: 0x38 };
+
+    // ── time domain (hi bits 6-8) ──
+    pub const TIME_READ: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 6 };
+    pub const TIME_SLEEP: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 7 };
+    pub const TIME_TIMER: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 8 };
+    pub const TIME: TrxCapSet = TrxCapSet { lo: 0, hi: 0x1C0 };
+
+    // ── system domain (hi bits 9-11) ──
+    pub const SYSTEM_REBOOT: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 9 };
+    pub const SYSTEM_MODULE: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 10 };
+    pub const SYSTEM_AUDIT: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 11 };
+    pub const SYSTEM: TrxCapSet = TrxCapSet { lo: 0, hi: 0xE00 };
+
+    // ── aggregate constants ──
+    pub const NONE: TrxCapSet = TrxCapSet { lo: 0, hi: 0 };
+    pub const ROOT: TrxCapSet = TrxCapSet { lo: 0xFFF_FFFF, hi: 0xFFF };
+}
+
+impl TrxCapSet {
+    /// Check if this capability set contains all bits in `cap`.
+    #[inline]
+    pub const fn contains(self, cap: Self) -> bool {
+        (self.lo & cap.lo) == cap.lo && (self.hi & cap.hi) == cap.hi
+    }
+
+    /// Combine two capability sets (bitwise OR).
+    #[inline]
+    pub const fn union(self, other: Self) -> Self {
+        Self {
+            lo: self.lo | other.lo,
+            hi: self.hi | other.hi,
+        }
+    }
+
+    /// Intersect two capability sets (bitwise AND).
+    #[inline]
+    pub const fn intersection(self, other: Self) -> Self {
+        Self {
+            lo: self.lo & other.lo,
+            hi: self.hi & other.hi,
+        }
+    }
+
+    /// Remove capabilities (bitwise AND NOT).
+    #[inline]
+    pub const fn difference(self, other: Self) -> Self {
+        Self {
+            lo: self.lo & !other.lo,
+            hi: self.hi & !other.hi,
+        }
+    }
+
+    /// Check if the capability set is empty.
+    #[inline]
+    pub const fn is_empty(self) -> bool {
+        self.lo == 0 && self.hi == 0
+    }
+}
+
 pub const MODULE_NAME_MAX: usize = 64;
 pub const MODULE_MAGIC: u32 = 0x47454E4D;
 pub const MODULE_SECTION: &str = ".gen_module";
@@ -627,5 +768,245 @@ mod tests {
     fn abi_version_constants() {
         assert_eq!(MODULE_ABI_VERSION_MAJOR, 0);
         assert_eq!(MODULE_ABI_VERSION_MINOR, 1);
+    }
+
+    // -- TrxCapSet tests --
+
+    #[test]
+    fn trx_capset_size() {
+        assert_eq!(mem::size_of::<TrxCapSet>(), 16);
+    }
+
+    #[test]
+    fn trx_capset_alignment() {
+        assert!(mem::align_of::<TrxCapSet>() >= 8);
+    }
+
+    #[test]
+    fn trx_capset_leaf_bits_are_single_bit() {
+        let leaves = [
+            // lo word leaves
+            trx_cap::PROCESS_CREATE,
+            trx_cap::PROCESS_SIGNAL,
+            trx_cap::PROCESS_INSPECT,
+            trx_cap::PROCESS_MANAGE,
+            trx_cap::MEMORY_ALLOC,
+            trx_cap::MEMORY_MAP,
+            trx_cap::MEMORY_SHARE,
+            trx_cap::MEMORY_DMA,
+            trx_cap::THREAD_CREATE,
+            trx_cap::THREAD_JOIN,
+            trx_cap::THREAD_AFFINITY,
+            trx_cap::IPC_CHANNEL,
+            trx_cap::IPC_SIGNAL,
+            trx_cap::IPC_EVENT,
+            trx_cap::FS_READ,
+            trx_cap::FS_WRITE,
+            trx_cap::FS_CREATE,
+            trx_cap::FS_DELETE,
+            trx_cap::IO_PORT,
+            trx_cap::IO_IRQ,
+            trx_cap::IO_MMIO,
+            trx_cap::DISPLAY_COMPOSITOR,
+            trx_cap::DISPLAY_SURFACE,
+            trx_cap::DISPLAY_BUFFER,
+            trx_cap::DISPLAY_MODE,
+            trx_cap::INPUT_KEYBOARD,
+            trx_cap::INPUT_POINTER,
+            trx_cap::INPUT_TOUCH,
+            // hi word leaves
+            trx_cap::GPU_RENDER,
+            trx_cap::GPU_COMPUTE,
+            trx_cap::GPU_ALLOC,
+            trx_cap::NET_SOCKET,
+            trx_cap::NET_BIND,
+            trx_cap::NET_RAW,
+            trx_cap::TIME_READ,
+            trx_cap::TIME_SLEEP,
+            trx_cap::TIME_TIMER,
+            trx_cap::SYSTEM_REBOOT,
+            trx_cap::SYSTEM_MODULE,
+            trx_cap::SYSTEM_AUDIT,
+        ];
+        for cap in &leaves {
+            let total_bits = cap.lo.count_ones() + cap.hi.count_ones();
+            assert_eq!(
+                total_bits, 1,
+                "Leaf cap lo={:#x} hi={:#x} should be a single bit",
+                cap.lo, cap.hi
+            );
+        }
+    }
+
+    #[test]
+    fn trx_capset_leaf_bits_unique() {
+        let leaves: [(u64, u64); 40] = [
+            (trx_cap::PROCESS_CREATE.lo, trx_cap::PROCESS_CREATE.hi),
+            (trx_cap::PROCESS_SIGNAL.lo, trx_cap::PROCESS_SIGNAL.hi),
+            (trx_cap::PROCESS_INSPECT.lo, trx_cap::PROCESS_INSPECT.hi),
+            (trx_cap::PROCESS_MANAGE.lo, trx_cap::PROCESS_MANAGE.hi),
+            (trx_cap::MEMORY_ALLOC.lo, trx_cap::MEMORY_ALLOC.hi),
+            (trx_cap::MEMORY_MAP.lo, trx_cap::MEMORY_MAP.hi),
+            (trx_cap::MEMORY_SHARE.lo, trx_cap::MEMORY_SHARE.hi),
+            (trx_cap::MEMORY_DMA.lo, trx_cap::MEMORY_DMA.hi),
+            (trx_cap::THREAD_CREATE.lo, trx_cap::THREAD_CREATE.hi),
+            (trx_cap::THREAD_JOIN.lo, trx_cap::THREAD_JOIN.hi),
+            (trx_cap::THREAD_AFFINITY.lo, trx_cap::THREAD_AFFINITY.hi),
+            (trx_cap::IPC_CHANNEL.lo, trx_cap::IPC_CHANNEL.hi),
+            (trx_cap::IPC_SIGNAL.lo, trx_cap::IPC_SIGNAL.hi),
+            (trx_cap::IPC_EVENT.lo, trx_cap::IPC_EVENT.hi),
+            (trx_cap::FS_READ.lo, trx_cap::FS_READ.hi),
+            (trx_cap::FS_WRITE.lo, trx_cap::FS_WRITE.hi),
+            (trx_cap::FS_CREATE.lo, trx_cap::FS_CREATE.hi),
+            (trx_cap::FS_DELETE.lo, trx_cap::FS_DELETE.hi),
+            (trx_cap::IO_PORT.lo, trx_cap::IO_PORT.hi),
+            (trx_cap::IO_IRQ.lo, trx_cap::IO_IRQ.hi),
+            (trx_cap::IO_MMIO.lo, trx_cap::IO_MMIO.hi),
+            (trx_cap::DISPLAY_COMPOSITOR.lo, trx_cap::DISPLAY_COMPOSITOR.hi),
+            (trx_cap::DISPLAY_SURFACE.lo, trx_cap::DISPLAY_SURFACE.hi),
+            (trx_cap::DISPLAY_BUFFER.lo, trx_cap::DISPLAY_BUFFER.hi),
+            (trx_cap::DISPLAY_MODE.lo, trx_cap::DISPLAY_MODE.hi),
+            (trx_cap::INPUT_KEYBOARD.lo, trx_cap::INPUT_KEYBOARD.hi),
+            (trx_cap::INPUT_POINTER.lo, trx_cap::INPUT_POINTER.hi),
+            (trx_cap::INPUT_TOUCH.lo, trx_cap::INPUT_TOUCH.hi),
+            (trx_cap::GPU_RENDER.lo, trx_cap::GPU_RENDER.hi),
+            (trx_cap::GPU_COMPUTE.lo, trx_cap::GPU_COMPUTE.hi),
+            (trx_cap::GPU_ALLOC.lo, trx_cap::GPU_ALLOC.hi),
+            (trx_cap::NET_SOCKET.lo, trx_cap::NET_SOCKET.hi),
+            (trx_cap::NET_BIND.lo, trx_cap::NET_BIND.hi),
+            (trx_cap::NET_RAW.lo, trx_cap::NET_RAW.hi),
+            (trx_cap::TIME_READ.lo, trx_cap::TIME_READ.hi),
+            (trx_cap::TIME_SLEEP.lo, trx_cap::TIME_SLEEP.hi),
+            (trx_cap::TIME_TIMER.lo, trx_cap::TIME_TIMER.hi),
+            (trx_cap::SYSTEM_REBOOT.lo, trx_cap::SYSTEM_REBOOT.hi),
+            (trx_cap::SYSTEM_MODULE.lo, trx_cap::SYSTEM_MODULE.hi),
+            (trx_cap::SYSTEM_AUDIT.lo, trx_cap::SYSTEM_AUDIT.hi),
+        ];
+        for (i, a) in leaves.iter().enumerate() {
+            for b in &leaves[i + 1..] {
+                assert!(
+                    a != b,
+                    "Duplicate leaf cap: lo={:#x} hi={:#x}",
+                    a.0, a.1
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn trx_capset_parent_contains_children() {
+        // Process domain
+        assert!(trx_cap::PROCESS.contains(trx_cap::PROCESS_CREATE));
+        assert!(trx_cap::PROCESS.contains(trx_cap::PROCESS_SIGNAL));
+        assert!(trx_cap::PROCESS.contains(trx_cap::PROCESS_INSPECT));
+        assert!(trx_cap::PROCESS.contains(trx_cap::PROCESS_MANAGE));
+        // Memory domain
+        assert!(trx_cap::MEMORY.contains(trx_cap::MEMORY_ALLOC));
+        assert!(trx_cap::MEMORY.contains(trx_cap::MEMORY_DMA));
+        // Thread domain
+        assert!(trx_cap::THREAD.contains(trx_cap::THREAD_CREATE));
+        assert!(trx_cap::THREAD.contains(trx_cap::THREAD_AFFINITY));
+        // IPC domain
+        assert!(trx_cap::IPC.contains(trx_cap::IPC_CHANNEL));
+        assert!(trx_cap::IPC.contains(trx_cap::IPC_EVENT));
+        // FS domain
+        assert!(trx_cap::FS.contains(trx_cap::FS_READ));
+        assert!(trx_cap::FS.contains(trx_cap::FS_DELETE));
+        // IO domain
+        assert!(trx_cap::IO.contains(trx_cap::IO_PORT));
+        assert!(trx_cap::IO.contains(trx_cap::IO_MMIO));
+        // Display domain
+        assert!(trx_cap::DISPLAY.contains(trx_cap::DISPLAY_COMPOSITOR));
+        assert!(trx_cap::DISPLAY.contains(trx_cap::DISPLAY_MODE));
+        // Input domain
+        assert!(trx_cap::INPUT.contains(trx_cap::INPUT_KEYBOARD));
+        assert!(trx_cap::INPUT.contains(trx_cap::INPUT_TOUCH));
+        // GPU domain
+        assert!(trx_cap::GPU.contains(trx_cap::GPU_RENDER));
+        assert!(trx_cap::GPU.contains(trx_cap::GPU_ALLOC));
+        // Net domain
+        assert!(trx_cap::NET.contains(trx_cap::NET_SOCKET));
+        assert!(trx_cap::NET.contains(trx_cap::NET_RAW));
+        // Time domain
+        assert!(trx_cap::TIME.contains(trx_cap::TIME_READ));
+        assert!(trx_cap::TIME.contains(trx_cap::TIME_TIMER));
+        // System domain
+        assert!(trx_cap::SYSTEM.contains(trx_cap::SYSTEM_REBOOT));
+        assert!(trx_cap::SYSTEM.contains(trx_cap::SYSTEM_AUDIT));
+    }
+
+    #[test]
+    fn trx_capset_root_contains_all_domains() {
+        assert!(trx_cap::ROOT.contains(trx_cap::PROCESS));
+        assert!(trx_cap::ROOT.contains(trx_cap::MEMORY));
+        assert!(trx_cap::ROOT.contains(trx_cap::THREAD));
+        assert!(trx_cap::ROOT.contains(trx_cap::IPC));
+        assert!(trx_cap::ROOT.contains(trx_cap::FS));
+        assert!(trx_cap::ROOT.contains(trx_cap::IO));
+        assert!(trx_cap::ROOT.contains(trx_cap::DISPLAY));
+        assert!(trx_cap::ROOT.contains(trx_cap::INPUT));
+        assert!(trx_cap::ROOT.contains(trx_cap::GPU));
+        assert!(trx_cap::ROOT.contains(trx_cap::NET));
+        assert!(trx_cap::ROOT.contains(trx_cap::TIME));
+        assert!(trx_cap::ROOT.contains(trx_cap::SYSTEM));
+    }
+
+    #[test]
+    fn trx_capset_none_is_empty() {
+        assert!(trx_cap::NONE.is_empty());
+        assert!(!trx_cap::ROOT.is_empty());
+        assert!(!trx_cap::NONE.contains(trx_cap::PROCESS_CREATE));
+    }
+
+    #[test]
+    fn trx_capset_domains_no_overlap() {
+        let domains = [
+            trx_cap::PROCESS,
+            trx_cap::MEMORY,
+            trx_cap::THREAD,
+            trx_cap::IPC,
+            trx_cap::FS,
+            trx_cap::IO,
+            trx_cap::DISPLAY,
+            trx_cap::INPUT,
+            trx_cap::GPU,
+            trx_cap::NET,
+            trx_cap::TIME,
+            trx_cap::SYSTEM,
+        ];
+        for (i, a) in domains.iter().enumerate() {
+            for b in &domains[i + 1..] {
+                let inter = a.intersection(*b);
+                assert!(
+                    inter.is_empty(),
+                    "Domains overlap: ({:#x},{:#x}) & ({:#x},{:#x}) = ({:#x},{:#x})",
+                    a.lo, a.hi, b.lo, b.hi, inter.lo, inter.hi
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn trx_capset_union_intersection_difference() {
+        let proc_mem = trx_cap::PROCESS.union(trx_cap::MEMORY);
+        assert!(proc_mem.contains(trx_cap::PROCESS_CREATE));
+        assert!(proc_mem.contains(trx_cap::MEMORY_DMA));
+        assert!(!proc_mem.contains(trx_cap::THREAD_CREATE));
+
+        let just_proc = proc_mem.intersection(trx_cap::PROCESS);
+        assert_eq!(just_proc, trx_cap::PROCESS);
+
+        let just_mem = proc_mem.difference(trx_cap::PROCESS);
+        assert_eq!(just_mem, trx_cap::MEMORY);
+    }
+
+    #[test]
+    fn trx_capset_cross_word_operations() {
+        // Combine lo-word and hi-word capabilities
+        let mixed = trx_cap::PROCESS_CREATE.union(trx_cap::GPU_RENDER);
+        assert!(mixed.contains(trx_cap::PROCESS_CREATE));
+        assert!(mixed.contains(trx_cap::GPU_RENDER));
+        assert!(!mixed.contains(trx_cap::PROCESS_SIGNAL));
+        assert!(!mixed.contains(trx_cap::GPU_COMPUTE));
     }
 }
