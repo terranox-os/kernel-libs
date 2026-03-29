@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-29
+
+### Added
+
+- **arch-intrinsics**: C inline asm headers for all 4 architectures (x86_64, AArch64, ARM Cortex-M, RISC-V 64) — header-only, static inline functions matching Rust API
+- **crypto**: C implementations of CRC-32 (IEEE 802.3, table/bitwise), SHA-256 (FIPS 180-4), HMAC-SHA256 (RFC 2104) — verified with same standard test vectors as Rust
+- **sync**: C implementations using C11 atomics — ticket spinlock, one-time initialization, atomic bitmap operations
+- **collections**: C implementations of intrusive doubly-linked list and red-black tree (CLRS algorithm) — 17 C tests including 100-node stress test
+
+All new C code is dual-language alongside existing Rust implementations. Enables direct consumption by GenesisOS-RT and HermeticaOS without FFI overhead.
+
 ## [0.1.0] - 2026-03-22
 
 ### Added

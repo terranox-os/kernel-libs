@@ -1,6 +1,31 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 
 package(default_visibility = ["//visibility:public"])
+
+# ── C header-only library (arch-gated inline asm) ──────────
+
+cc_library(
+    name = "gen_arch_intrinsics",
+    hdrs = [
+        "include/gen_arch_x86_64.h",
+        "include/gen_arch_aarch64.h",
+        "include/gen_arch_arm_cm.h",
+        "include/gen_arch_riscv64.h",
+    ],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+)
+
+# ── Rust implementation ──────────────────────────────────────
 
 rust_library(
     name = "kernel_arch_intrinsics",

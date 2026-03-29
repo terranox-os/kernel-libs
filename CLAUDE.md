@@ -42,11 +42,11 @@ cargo build --workspace --target x86_64-unknown-none
 | primitives | — | `//primitives:gen_primitives` | — |
 | bitops | `kernel-bitops` | `//bitops:gen_bitops` | `//bitops:kernel_bitops` |
 | kfmt | `kernel-kfmt` | `//kfmt:gen_kfmt` | `//kfmt:kernel_kfmt` |
-| sync | `kernel-sync` | — | `//sync:kernel_sync` |
-| arch-intrinsics | `kernel-arch-intrinsics` | — | `//arch-intrinsics:kernel_arch_intrinsics` |
+| sync | `kernel-sync` | `//sync:gen_sync` | `//sync:kernel_sync` |
+| arch-intrinsics | `kernel-arch-intrinsics` | `//arch-intrinsics:gen_arch_intrinsics` | `//arch-intrinsics:kernel_arch_intrinsics` |
 | alloc | `kernel-alloc` | `//alloc:gen_alloc` | `//alloc:kernel_alloc` |
-| collections | `kernel-collections` | — | `//collections:kernel_collections` |
-| crypto | `kernel-crypto` | — | `//crypto:kernel_crypto` |
+| collections | `kernel-collections` | `//collections:gen_collections` | `//collections:kernel_collections` |
+| crypto | `kernel-crypto` | `//crypto:gen_crypto` | `//crypto:kernel_crypto` |
 | elf | `kernel-elf` | — | `//elf:kernel_elf` |
 | devicetree | `kernel-devicetree` | — | `//devicetree:kernel_devicetree` |
 
@@ -104,7 +104,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ## Testing
 
-- **149 Rust tests + 104 C tests = 253 total**, all passing
+- **149 Rust tests + 144 C tests = 293 total**, all passing
 - Rust tests run via `cargo test` on host (no QEMU)
 - C tests compile with GCC (`-ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic`) and link against object files — see `*/tests/` directories
 - Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree`

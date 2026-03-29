@@ -1,6 +1,42 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 package(default_visibility = ["//visibility:public"])
+
+# ── C implementation (intrusive_list + rbtree only) ──────────
+
+cc_library(
+    name = "gen_collections",
+    srcs = [
+        "src/intrusive_list.c",
+        "src/rbtree.c",
+    ],
+    hdrs = ["include/gen_collections.h"],
+    includes = ["include"],
+    copts = [
+        "-ffreestanding",
+        "-nostdlib",
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-Wpedantic",
+    ],
+)
+
+cc_test(
+    name = "collections_test",
+    srcs = ["tests/collections_test.c"],
+    deps = [":gen_collections"],
+    copts = [
+        "-std=c17",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+)
+
+# ── Rust implementation ──────────────────────────────────────
 
 rust_library(
     name = "kernel_collections",
