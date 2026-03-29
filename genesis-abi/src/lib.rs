@@ -238,15 +238,123 @@ pub mod syscall {
     pub const SYS_FCNTL: GenSyscallNr = GenSyscallNr(0x0015);
     pub const SYS_POLL: GenSyscallNr = GenSyscallNr(0x0016);
 
-    // TerranoxOS syscalls (0x0100–0x01FF)
-    pub const SYS_CAP_GRANT: GenSyscallNr = GenSyscallNr(0x0100);
-    pub const SYS_CAP_REVOKE: GenSyscallNr = GenSyscallNr(0x0101);
-    pub const SYS_CAP_CHECK: GenSyscallNr = GenSyscallNr(0x0102);
-    pub const SYS_SIGIL_SIGN: GenSyscallNr = GenSyscallNr(0x0103);
-    pub const SYS_SIGIL_VERIFY: GenSyscallNr = GenSyscallNr(0x0104);
-    pub const SYS_AUDIT_LOG: GenSyscallNr = GenSyscallNr(0x0105);
-    pub const SYS_SANDBOX_CREATE: GenSyscallNr = GenSyscallNr(0x0106);
-    pub const SYS_SANDBOX_ENTER: GenSyscallNr = GenSyscallNr(0x0107);
+    // TerranoxOS syscalls (0x0100–0x01FF) — organized by subsystem
+
+    // Subsystem 0: Process management (0x0100–0x010F)
+    pub const SYS_TRX_PROCESS_CREATE: GenSyscallNr = GenSyscallNr(0x0100);
+    pub const SYS_TRX_PROCESS_KILL: GenSyscallNr = GenSyscallNr(0x0103);
+    pub const SYS_TRX_PROCESS_INFO: GenSyscallNr = GenSyscallNr(0x0104);
+    pub const SYS_TRX_PROCESS_CAP_GRANT: GenSyscallNr = GenSyscallNr(0x0105);
+    pub const SYS_TRX_PROCESS_CAP_REVOKE: GenSyscallNr = GenSyscallNr(0x0106);
+    pub const SYS_TRX_PROCESS_CAP_QUERY: GenSyscallNr = GenSyscallNr(0x0107);
+
+    // Subsystem 1: Thread management (0x0110–0x011F)
+    pub const SYS_TRX_THREAD_CREATE: GenSyscallNr = GenSyscallNr(0x0110);
+    pub const SYS_TRX_THREAD_EXIT: GenSyscallNr = GenSyscallNr(0x0111);
+    pub const SYS_TRX_THREAD_JOIN: GenSyscallNr = GenSyscallNr(0x0112);
+    pub const SYS_TRX_THREAD_SET_AFFINITY: GenSyscallNr = GenSyscallNr(0x0114);
+    pub const SYS_TRX_THREAD_GET_AFFINITY: GenSyscallNr = GenSyscallNr(0x0115);
+    pub const SYS_TRX_THREAD_SET_NAME: GenSyscallNr = GenSyscallNr(0x0116);
+    pub const SYS_TRX_FUTEX_WAIT: GenSyscallNr = GenSyscallNr(0x0117);
+    pub const SYS_TRX_FUTEX_WAKE: GenSyscallNr = GenSyscallNr(0x0118);
+
+    // Subsystem 2: Memory management (0x0120–0x012F)
+    pub const SYS_TRX_MEM_PROTECT: GenSyscallNr = GenSyscallNr(0x0122);
+    pub const SYS_TRX_MEM_MAP: GenSyscallNr = GenSyscallNr(0x0123);
+    pub const SYS_TRX_MEM_UNMAP: GenSyscallNr = GenSyscallNr(0x0124);
+    pub const SYS_TRX_MEM_SHARE_CREATE: GenSyscallNr = GenSyscallNr(0x0125);
+    pub const SYS_TRX_MEM_SHARE_MAP: GenSyscallNr = GenSyscallNr(0x0126);
+    pub const SYS_TRX_MEM_SHARE_UNMAP: GenSyscallNr = GenSyscallNr(0x0127);
+    pub const SYS_TRX_MEM_DMA_ALLOC: GenSyscallNr = GenSyscallNr(0x0128);
+    pub const SYS_TRX_MEM_DMA_FREE: GenSyscallNr = GenSyscallNr(0x0129);
+
+    // Subsystem 3: IPC channels (0x0130–0x013F)
+    pub const SYS_TRX_CHANNEL_CREATE: GenSyscallNr = GenSyscallNr(0x0130);
+    pub const SYS_TRX_CHANNEL_SEND: GenSyscallNr = GenSyscallNr(0x0131);
+    pub const SYS_TRX_CHANNEL_RECV: GenSyscallNr = GenSyscallNr(0x0132);
+    pub const SYS_TRX_CHANNEL_CLOSE: GenSyscallNr = GenSyscallNr(0x0133);
+    pub const SYS_TRX_CHANNEL_POLL: GenSyscallNr = GenSyscallNr(0x0134);
+    pub const SYS_TRX_SIGNAL_CREATE: GenSyscallNr = GenSyscallNr(0x0135);
+    pub const SYS_TRX_SIGNAL_RAISE: GenSyscallNr = GenSyscallNr(0x0136);
+    pub const SYS_TRX_SIGNAL_WAIT: GenSyscallNr = GenSyscallNr(0x0137);
+    pub const SYS_TRX_SIGNAL_CLEAR: GenSyscallNr = GenSyscallNr(0x0138);
+    pub const SYS_TRX_EVENT_WAIT_MANY: GenSyscallNr = GenSyscallNr(0x0139);
+
+    // Subsystem 4: File system extensions (0x0140–0x014F)
+    pub const SYS_TRX_FS_MKDIR: GenSyscallNr = GenSyscallNr(0x0147);
+    pub const SYS_TRX_FS_UNLINK: GenSyscallNr = GenSyscallNr(0x0148);
+    pub const SYS_TRX_FS_RENAME: GenSyscallNr = GenSyscallNr(0x0149);
+
+    // Subsystem 5: Display / compositor (0x0150–0x015F)
+    pub const SYS_TRX_DISPLAY_ENUMERATE: GenSyscallNr = GenSyscallNr(0x0150);
+    pub const SYS_TRX_DISPLAY_SET_MODE: GenSyscallNr = GenSyscallNr(0x0151);
+    pub const SYS_TRX_COMPOSITOR_CREATE: GenSyscallNr = GenSyscallNr(0x0152);
+    pub const SYS_TRX_COMPOSITOR_PRESENT: GenSyscallNr = GenSyscallNr(0x0153);
+    pub const SYS_TRX_SURFACE_CREATE: GenSyscallNr = GenSyscallNr(0x0154);
+    pub const SYS_TRX_SURFACE_DESTROY: GenSyscallNr = GenSyscallNr(0x0155);
+    pub const SYS_TRX_SURFACE_RESIZE: GenSyscallNr = GenSyscallNr(0x0156);
+    pub const SYS_TRX_BUFFER_CREATE: GenSyscallNr = GenSyscallNr(0x0157);
+    pub const SYS_TRX_BUFFER_MAP: GenSyscallNr = GenSyscallNr(0x0158);
+    pub const SYS_TRX_BUFFER_UNMAP: GenSyscallNr = GenSyscallNr(0x0159);
+
+    // Subsystem 6: Input devices (0x0160–0x016F)
+    pub const SYS_TRX_INPUT_ENUMERATE: GenSyscallNr = GenSyscallNr(0x0160);
+    pub const SYS_TRX_INPUT_OPEN: GenSyscallNr = GenSyscallNr(0x0161);
+    pub const SYS_TRX_INPUT_CLOSE: GenSyscallNr = GenSyscallNr(0x0162);
+    pub const SYS_TRX_INPUT_READ_EVENTS: GenSyscallNr = GenSyscallNr(0x0163);
+    pub const SYS_TRX_INPUT_GRAB: GenSyscallNr = GenSyscallNr(0x0164);
+    pub const SYS_TRX_INPUT_UNGRAB: GenSyscallNr = GenSyscallNr(0x0165);
+    pub const SYS_TRX_INPUT_SET_KEYMAP: GenSyscallNr = GenSyscallNr(0x0166);
+    pub const SYS_TRX_TOUCH_READ_EVENTS: GenSyscallNr = GenSyscallNr(0x0167);
+    pub const SYS_TRX_INPUT_SET_ACCEL: GenSyscallNr = GenSyscallNr(0x0168);
+
+    // Subsystem 7: GPU / DRM (0x0170–0x017F)
+    pub const SYS_TRX_GPU_OPEN: GenSyscallNr = GenSyscallNr(0x0170);
+    pub const SYS_TRX_GPU_CLOSE: GenSyscallNr = GenSyscallNr(0x0171);
+    pub const SYS_TRX_GPU_ALLOC_BO: GenSyscallNr = GenSyscallNr(0x0172);
+    pub const SYS_TRX_GPU_FREE_BO: GenSyscallNr = GenSyscallNr(0x0173);
+    pub const SYS_TRX_GPU_MAP_BO: GenSyscallNr = GenSyscallNr(0x0174);
+    pub const SYS_TRX_GPU_SUBMIT: GenSyscallNr = GenSyscallNr(0x0175);
+    pub const SYS_TRX_GPU_WAIT_FENCE: GenSyscallNr = GenSyscallNr(0x0176);
+    pub const SYS_TRX_GPU_EXPORT_DMABUF: GenSyscallNr = GenSyscallNr(0x0177);
+    pub const SYS_TRX_GPU_IMPORT_DMABUF: GenSyscallNr = GenSyscallNr(0x0178);
+    pub const SYS_TRX_GPU_GET_INFO: GenSyscallNr = GenSyscallNr(0x0179);
+
+    // Subsystem 8: Networking (0x0180–0x018F)
+    pub const SYS_TRX_NET_SOCKET: GenSyscallNr = GenSyscallNr(0x0180);
+    pub const SYS_TRX_NET_BIND: GenSyscallNr = GenSyscallNr(0x0181);
+    pub const SYS_TRX_NET_LISTEN: GenSyscallNr = GenSyscallNr(0x0182);
+    pub const SYS_TRX_NET_ACCEPT: GenSyscallNr = GenSyscallNr(0x0183);
+    pub const SYS_TRX_NET_CONNECT: GenSyscallNr = GenSyscallNr(0x0184);
+    pub const SYS_TRX_NET_SENDMSG: GenSyscallNr = GenSyscallNr(0x0185);
+    pub const SYS_TRX_NET_RECVMSG: GenSyscallNr = GenSyscallNr(0x0186);
+
+    // Subsystem 9: Time / timers (0x0190–0x019F)
+    pub const SYS_TRX_TIMER_CREATE: GenSyscallNr = GenSyscallNr(0x0192);
+    pub const SYS_TRX_TIMER_SET: GenSyscallNr = GenSyscallNr(0x0193);
+
+    // Subsystem 10: System / audit (0x01A0–0x01AF)
+    pub const SYS_TRX_SYSTEM_REBOOT: GenSyscallNr = GenSyscallNr(0x01A0);
+    pub const SYS_TRX_MODULE_LOAD: GenSyscallNr = GenSyscallNr(0x01A1);
+    pub const SYS_TRX_MODULE_UNLOAD: GenSyscallNr = GenSyscallNr(0x01A2);
+    pub const SYS_TRX_AUDIT_READ: GenSyscallNr = GenSyscallNr(0x01A3);
+    pub const SYS_TRX_AUDIT_SET_POLICY: GenSyscallNr = GenSyscallNr(0x01A4);
+
+    // Subsystem 11: Sigil / sandbox — legacy (0x01B0–0x01BF)
+    pub const SYS_TRX_SIGIL_SIGN: GenSyscallNr = GenSyscallNr(0x01B0);
+    pub const SYS_TRX_SIGIL_VERIFY: GenSyscallNr = GenSyscallNr(0x01B1);
+    pub const SYS_TRX_SANDBOX_CREATE: GenSyscallNr = GenSyscallNr(0x01B2);
+    pub const SYS_TRX_SANDBOX_ENTER: GenSyscallNr = GenSyscallNr(0x01B3);
+
+    // Deprecated aliases — removed in v0.2.0. Use SYS_TRX_* names.
+    pub const SYS_CAP_GRANT: GenSyscallNr = SYS_TRX_PROCESS_CAP_GRANT;
+    pub const SYS_CAP_REVOKE: GenSyscallNr = SYS_TRX_PROCESS_CAP_REVOKE;
+    pub const SYS_CAP_CHECK: GenSyscallNr = SYS_TRX_PROCESS_CAP_QUERY;
+    pub const SYS_SIGIL_SIGN: GenSyscallNr = SYS_TRX_SIGIL_SIGN;
+    pub const SYS_SIGIL_VERIFY: GenSyscallNr = SYS_TRX_SIGIL_VERIFY;
+    pub const SYS_AUDIT_LOG: GenSyscallNr = SYS_TRX_AUDIT_READ;
+    pub const SYS_SANDBOX_CREATE: GenSyscallNr = SYS_TRX_SANDBOX_CREATE;
+    pub const SYS_SANDBOX_ENTER: GenSyscallNr = SYS_TRX_SANDBOX_ENTER;
 
     // GenesisOS-RT syscalls (0x0200–0x02FF)
     pub const SYS_RT_TASK_CREATE: GenSyscallNr = GenSyscallNr(0x0200);
@@ -286,6 +394,15 @@ impl GenSyscallNr {
     #[inline]
     pub const fn is_hermetica(self) -> bool {
         self.0 >= syscall::HERMETICA_BASE.0 && self.0 < syscall::HERMETICA_LIMIT.0
+    }
+
+    /// Returns the TerranoxOS subsystem index (0-15), or -1 if not TerranoxOS.
+    #[inline]
+    pub const fn trx_subsystem(self) -> i32 {
+        if !self.is_terranox() {
+            return -1;
+        }
+        ((self.0 - syscall::TERRANOX_BASE.0) >> 4) as i32
     }
 }
 
@@ -863,14 +980,135 @@ mod tests {
         assert!(syscall::SYS_EXIT.is_shared());
         assert!(!syscall::SYS_EXIT.is_terranox());
 
-        assert!(syscall::SYS_CAP_GRANT.is_terranox());
-        assert!(!syscall::SYS_CAP_GRANT.is_shared());
+        assert!(syscall::SYS_TRX_PROCESS_CAP_GRANT.is_terranox());
+        assert!(!syscall::SYS_TRX_PROCESS_CAP_GRANT.is_shared());
 
         assert!(syscall::SYS_RT_TASK_CREATE.is_genesisrt());
         assert!(!syscall::SYS_RT_TASK_CREATE.is_terranox());
 
         assert!(syscall::SYS_MOD_LOAD.is_hermetica());
         assert!(!syscall::SYS_MOD_LOAD.is_genesisrt());
+    }
+
+    #[test]
+    fn trx_syscall_all_in_range() {
+        let trx_syscalls = [
+            // Process
+            syscall::SYS_TRX_PROCESS_CREATE, syscall::SYS_TRX_PROCESS_KILL,
+            syscall::SYS_TRX_PROCESS_INFO, syscall::SYS_TRX_PROCESS_CAP_GRANT,
+            syscall::SYS_TRX_PROCESS_CAP_REVOKE, syscall::SYS_TRX_PROCESS_CAP_QUERY,
+            // Thread
+            syscall::SYS_TRX_THREAD_CREATE, syscall::SYS_TRX_THREAD_EXIT,
+            syscall::SYS_TRX_THREAD_JOIN, syscall::SYS_TRX_THREAD_SET_AFFINITY,
+            syscall::SYS_TRX_THREAD_GET_AFFINITY, syscall::SYS_TRX_THREAD_SET_NAME,
+            syscall::SYS_TRX_FUTEX_WAIT, syscall::SYS_TRX_FUTEX_WAKE,
+            // Memory
+            syscall::SYS_TRX_MEM_PROTECT, syscall::SYS_TRX_MEM_MAP,
+            syscall::SYS_TRX_MEM_UNMAP, syscall::SYS_TRX_MEM_SHARE_CREATE,
+            syscall::SYS_TRX_MEM_SHARE_MAP, syscall::SYS_TRX_MEM_SHARE_UNMAP,
+            syscall::SYS_TRX_MEM_DMA_ALLOC, syscall::SYS_TRX_MEM_DMA_FREE,
+            // IPC
+            syscall::SYS_TRX_CHANNEL_CREATE, syscall::SYS_TRX_CHANNEL_SEND,
+            syscall::SYS_TRX_CHANNEL_RECV, syscall::SYS_TRX_CHANNEL_CLOSE,
+            syscall::SYS_TRX_CHANNEL_POLL, syscall::SYS_TRX_SIGNAL_CREATE,
+            syscall::SYS_TRX_SIGNAL_RAISE, syscall::SYS_TRX_SIGNAL_WAIT,
+            syscall::SYS_TRX_SIGNAL_CLEAR, syscall::SYS_TRX_EVENT_WAIT_MANY,
+            // FS
+            syscall::SYS_TRX_FS_MKDIR, syscall::SYS_TRX_FS_UNLINK,
+            syscall::SYS_TRX_FS_RENAME,
+            // Display
+            syscall::SYS_TRX_DISPLAY_ENUMERATE, syscall::SYS_TRX_DISPLAY_SET_MODE,
+            syscall::SYS_TRX_COMPOSITOR_CREATE, syscall::SYS_TRX_COMPOSITOR_PRESENT,
+            syscall::SYS_TRX_SURFACE_CREATE, syscall::SYS_TRX_SURFACE_DESTROY,
+            syscall::SYS_TRX_SURFACE_RESIZE, syscall::SYS_TRX_BUFFER_CREATE,
+            syscall::SYS_TRX_BUFFER_MAP, syscall::SYS_TRX_BUFFER_UNMAP,
+            // Input
+            syscall::SYS_TRX_INPUT_ENUMERATE, syscall::SYS_TRX_INPUT_OPEN,
+            syscall::SYS_TRX_INPUT_CLOSE, syscall::SYS_TRX_INPUT_READ_EVENTS,
+            syscall::SYS_TRX_INPUT_GRAB, syscall::SYS_TRX_INPUT_UNGRAB,
+            syscall::SYS_TRX_INPUT_SET_KEYMAP, syscall::SYS_TRX_TOUCH_READ_EVENTS,
+            syscall::SYS_TRX_INPUT_SET_ACCEL,
+            // GPU
+            syscall::SYS_TRX_GPU_OPEN, syscall::SYS_TRX_GPU_CLOSE,
+            syscall::SYS_TRX_GPU_ALLOC_BO, syscall::SYS_TRX_GPU_FREE_BO,
+            syscall::SYS_TRX_GPU_MAP_BO, syscall::SYS_TRX_GPU_SUBMIT,
+            syscall::SYS_TRX_GPU_WAIT_FENCE, syscall::SYS_TRX_GPU_EXPORT_DMABUF,
+            syscall::SYS_TRX_GPU_IMPORT_DMABUF, syscall::SYS_TRX_GPU_GET_INFO,
+            // Net
+            syscall::SYS_TRX_NET_SOCKET, syscall::SYS_TRX_NET_BIND,
+            syscall::SYS_TRX_NET_LISTEN, syscall::SYS_TRX_NET_ACCEPT,
+            syscall::SYS_TRX_NET_CONNECT, syscall::SYS_TRX_NET_SENDMSG,
+            syscall::SYS_TRX_NET_RECVMSG,
+            // Time
+            syscall::SYS_TRX_TIMER_CREATE, syscall::SYS_TRX_TIMER_SET,
+            // System
+            syscall::SYS_TRX_SYSTEM_REBOOT, syscall::SYS_TRX_MODULE_LOAD,
+            syscall::SYS_TRX_MODULE_UNLOAD, syscall::SYS_TRX_AUDIT_READ,
+            syscall::SYS_TRX_AUDIT_SET_POLICY,
+            // Sigil/sandbox
+            syscall::SYS_TRX_SIGIL_SIGN, syscall::SYS_TRX_SIGIL_VERIFY,
+            syscall::SYS_TRX_SANDBOX_CREATE, syscall::SYS_TRX_SANDBOX_ENTER,
+        ];
+        for s in trx_syscalls {
+            assert!(
+                s.is_terranox(),
+                "TRX syscall {:#x} not in TerranoxOS range",
+                s.0
+            );
+        }
+    }
+
+    #[test]
+    fn trx_syscall_no_duplicates() {
+        let trx_nrs: [u32; 82] = [
+            0x0100, 0x0103, 0x0104, 0x0105, 0x0106, 0x0107,
+            0x0110, 0x0111, 0x0112, 0x0114, 0x0115, 0x0116, 0x0117, 0x0118,
+            0x0122, 0x0123, 0x0124, 0x0125, 0x0126, 0x0127, 0x0128, 0x0129,
+            0x0130, 0x0131, 0x0132, 0x0133, 0x0134, 0x0135, 0x0136, 0x0137, 0x0138, 0x0139,
+            0x0147, 0x0148, 0x0149,
+            0x0150, 0x0151, 0x0152, 0x0153, 0x0154, 0x0155, 0x0156, 0x0157, 0x0158, 0x0159,
+            0x0160, 0x0161, 0x0162, 0x0163, 0x0164, 0x0165, 0x0166, 0x0167, 0x0168,
+            0x0170, 0x0171, 0x0172, 0x0173, 0x0174, 0x0175, 0x0176, 0x0177, 0x0178, 0x0179,
+            0x0180, 0x0181, 0x0182, 0x0183, 0x0184, 0x0185, 0x0186,
+            0x0192, 0x0193,
+            0x01A0, 0x01A1, 0x01A2, 0x01A3, 0x01A4,
+            0x01B0, 0x01B1, 0x01B2, 0x01B3,
+        ];
+        for (i, &a) in trx_nrs.iter().enumerate() {
+            for &b in &trx_nrs[i + 1..] {
+                assert_ne!(a, b, "Duplicate TRX syscall number: {:#x}", a);
+            }
+        }
+    }
+
+    #[test]
+    fn trx_syscall_subsystem_classification() {
+        assert_eq!(syscall::SYS_TRX_PROCESS_CREATE.trx_subsystem(), 0);
+        assert_eq!(syscall::SYS_TRX_THREAD_CREATE.trx_subsystem(), 1);
+        assert_eq!(syscall::SYS_TRX_MEM_PROTECT.trx_subsystem(), 2);
+        assert_eq!(syscall::SYS_TRX_CHANNEL_CREATE.trx_subsystem(), 3);
+        assert_eq!(syscall::SYS_TRX_FS_MKDIR.trx_subsystem(), 4);
+        assert_eq!(syscall::SYS_TRX_DISPLAY_ENUMERATE.trx_subsystem(), 5);
+        assert_eq!(syscall::SYS_TRX_INPUT_ENUMERATE.trx_subsystem(), 6);
+        assert_eq!(syscall::SYS_TRX_GPU_OPEN.trx_subsystem(), 7);
+        assert_eq!(syscall::SYS_TRX_NET_SOCKET.trx_subsystem(), 8);
+        assert_eq!(syscall::SYS_TRX_TIMER_CREATE.trx_subsystem(), 9);
+        assert_eq!(syscall::SYS_TRX_SYSTEM_REBOOT.trx_subsystem(), 10);
+        assert_eq!(syscall::SYS_TRX_SIGIL_SIGN.trx_subsystem(), 11);
+        // Non-TerranoxOS returns -1
+        assert_eq!(syscall::SYS_EXIT.trx_subsystem(), -1);
+    }
+
+    #[test]
+    fn trx_deprecated_aliases_match_new_names() {
+        assert_eq!(syscall::SYS_CAP_GRANT, syscall::SYS_TRX_PROCESS_CAP_GRANT);
+        assert_eq!(syscall::SYS_CAP_REVOKE, syscall::SYS_TRX_PROCESS_CAP_REVOKE);
+        assert_eq!(syscall::SYS_CAP_CHECK, syscall::SYS_TRX_PROCESS_CAP_QUERY);
+        assert_eq!(syscall::SYS_SIGIL_SIGN, syscall::SYS_TRX_SIGIL_SIGN);
+        assert_eq!(syscall::SYS_SIGIL_VERIFY, syscall::SYS_TRX_SIGIL_VERIFY);
+        assert_eq!(syscall::SYS_AUDIT_LOG, syscall::SYS_TRX_AUDIT_READ);
+        assert_eq!(syscall::SYS_SANDBOX_CREATE, syscall::SYS_TRX_SANDBOX_CREATE);
+        assert_eq!(syscall::SYS_SANDBOX_ENTER, syscall::SYS_TRX_SANDBOX_ENTER);
     }
 
     #[test]

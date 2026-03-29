@@ -76,9 +76,24 @@ int main(void)
     (void)gen_result_name(GEN_ERR_INVALID_ARG);
 
     (void)gen_syscall_is_shared(GEN_SYS_EXIT);
-    (void)gen_syscall_is_terranox(GEN_SYS_CAP_GRANT);
+    (void)gen_syscall_is_terranox(GEN_SYS_TRX_PROCESS_CAP_GRANT);
     (void)gen_syscall_is_genesisrt(GEN_SYS_RT_TASK_CREATE);
     (void)gen_syscall_is_hermetica(GEN_SYS_MOD_LOAD);
+
+    /* Deprecated aliases still work */
+    if (GEN_SYS_CAP_GRANT != GEN_SYS_TRX_PROCESS_CAP_GRANT) return 1;
+    if (GEN_SYS_AUDIT_LOG != GEN_SYS_TRX_AUDIT_READ) return 1;
+
+    /* Verify subsystem classification */
+    if (gen_syscall_trx_subsystem(GEN_SYS_TRX_PROCESS_CREATE) != 0) return 1;
+    if (gen_syscall_trx_subsystem(GEN_SYS_TRX_GPU_OPEN) != 7) return 1;
+    if (gen_syscall_trx_subsystem(GEN_SYS_TRX_SIGIL_SIGN) != 11) return 1;
+    if (gen_syscall_trx_subsystem(GEN_SYS_EXIT) != -1) return 1;
+
+    /* Spot-check new syscall values */
+    if (!gen_syscall_is_terranox(GEN_SYS_TRX_CHANNEL_CREATE)) return 1;
+    if (!gen_syscall_is_terranox(GEN_SYS_TRX_NET_SOCKET)) return 1;
+    if (!gen_syscall_is_terranox(GEN_SYS_TRX_DISPLAY_ENUMERATE)) return 1;
 
     (void)gen_cap_contains(GEN_CAP_ALL, GEN_CAP_MEM_READ);
     (void)gen_cap_contains(GEN_CAP_NONE, GEN_CAP_MEM_READ);
