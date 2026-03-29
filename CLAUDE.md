@@ -90,7 +90,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ### Critical Implementation Details
 
-- **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions. Error codes use gaps between groups (general -1..-10, security -16..-18, I/O -32..-34, format -48..-50, module -64..-67, RT -80..-82, syscall -96..-98) to allow future additions. Note: `GEN_ERR_INTERRUPTED` (-9) is general interruption; `GEN_ERR_SYSCALL_INTERRUPTED` (-98) is syscall-specific. Syscall ranges are 256 entries each: shared 0x0000, TerranoxOS 0x0100, GenesisOS-RT 0x0200, HermeticaOS 0x0300.
+- **genesis-abi**: C headers under `include/` are the ABI source of truth. The Rust crate (`src/lib.rs`) mirrors them. CI must check for drift between C and Rust definitions. Error codes use gaps between groups (general -1..-10, security -16..-18, I/O -32..-37, format -48..-50, module -64..-67, RT -80..-82, syscall -96..-99) to allow future additions. Note: `GEN_ERR_INTERRUPTED` (-9) is general interruption; `GEN_ERR_SYSCALL_INTERRUPTED` (-98) is syscall-specific. Syscall ranges are 256 entries each: shared 0x0000, TerranoxOS 0x0100 (organized in 16-slot subsystem blocks), GenesisOS-RT 0x0200, HermeticaOS 0x0300. TerranoxOS capabilities use `TrxCapSet` (128-bit hierarchical DAG model, 12 domains, 40 leaf sub-capabilities); the flat `GenCapability` (16-bit) is preserved for other kernels. POSIX errno mapping at syscall boundary via `gen_result_to_errno()`/`gen_result_from_errno()`. TerranoxOS syscall data structures defined in `genesis_trx_types.h`.
 - **primitives**: Functions namespaced as `gen_memcpy`, `gen_memset`, etc. Compiler-required symbols (`memcpy`, `memset`, `memmove`, `memcmp`) are thin wrappers in `aliases.c` — built as separate Bazel target `//primitives:gen_primitives_aliases`, link exactly once. Word-aligned fast paths in memcpy/memset. `gen_secure_zero` uses volatile writes to prevent dead-store elimination.
 - **bitops**: Dual C + Rust with identical semantics. C uses `uint32_t*` raw pointers + `__builtin_ctz()`/`__builtin_popcount()`; Rust uses `&[u32]` slices with bounds checking + `BitIter`. Bitmap convention: 0 = free, 1 = allocated.
 - **kfmt**: C callback signature uses `uint8_t` (not `char`) for unambiguous byte semantics. Supports `%d/%i/%u/%x/%X/%p/%s/%c/%%`, width, zero-padding, `l`/`ll` length modifiers. Rust side provides `KernelWriter<F: FnMut(u8)>` implementing `core::fmt::Write`, `CountingWriter`, and `kwrite!` macro. ACSL annotations cover non-variadic helpers (`emit`, `emit_str`, `emit_pad`, `render_unsigned`); `gen_kvprintf`/`gen_kprintf` are excluded because Frama-C WP cannot reason about variadic functions (`va_list`). Only `render_unsigned` is WP-verified; callback-taking helpers are annotation-checked but not proved due to opaque function pointer calls.
@@ -104,7 +104,7 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 
 ## Testing
 
-- **149 Rust tests + 144 C tests = 293 total**, all passing
+- **178 Rust tests + 144 C tests = 322 total**, all passing
 - Rust tests run via `cargo test` on host (no QEMU)
 - C tests compile with GCC (`-ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic`) and link against object files — see `*/tests/` directories
 - Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree`
