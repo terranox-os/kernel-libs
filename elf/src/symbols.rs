@@ -1,6 +1,6 @@
 //! ELF64 symbol table parsing.
 
-use crate::parser::{ElfError, strtab_lookup, read_u16_le, read_u32_le, read_u64_le};
+use crate::parser::{read_u16_le, read_u32_le, read_u64_le, strtab_lookup, ElfError};
 
 // Symbol binding (upper 4 bits of st_info)
 pub const STB_LOCAL: u8 = 0;

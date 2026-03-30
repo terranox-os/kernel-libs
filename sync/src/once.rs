@@ -44,12 +44,10 @@ impl<T> Once<T> {
             return;
         }
 
-        match self.state.compare_exchange(
-            UNINIT,
-            RUNNING,
-            Ordering::Acquire,
-            Ordering::Relaxed,
-        ) {
+        match self
+            .state
+            .compare_exchange(UNINIT, RUNNING, Ordering::Acquire, Ordering::Relaxed)
+        {
             Ok(_) => {
                 // We won the race — initialize
                 // Safety: we are the only thread in RUNNING state
