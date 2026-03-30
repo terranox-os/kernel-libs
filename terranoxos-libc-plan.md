@@ -6,7 +6,7 @@
 
 ## Context
 
-TerranoxOS is not Linux-compatible. It has 91 custom syscalls across 11 subsystems, capability-based security (no UIDs), and its own calling convention. Existing C libraries (musl, glibc) target Linux syscalls and carry assumptions that don't apply. This plan designs a custom libc from scratch.
+TerranoxOS is not Linux-compatible. It has 82 TerranoxOS-specific syscalls across 12 subsystem blocks (0x0100-0x01BF), plus 23 shared syscalls (0x0000-0x0016) = 105 usable by TerranoxOS. Capability-based security (no UIDs), custom calling convention. Existing C libraries (musl, glibc) target Linux syscalls and carry assumptions that don't apply. This plan designs a custom libc from scratch.
 
 **Implementation language**: Zig (`export fn` produces C ABI symbols)
 **Public interface**: C headers (stdio.h, pthread.h, etc.) for C and Rust consumers
@@ -108,39 +108,39 @@ No manual constant duplication. If the kernel adds or renumbers syscalls (like t
 | `stdbool.h` | Boolean type (`bool`, `true`, `false`) | B | None (compiler-provided) | C11 7.18 |
 | `stddef.h` | Common definitions (`size_t`, `NULL`, `offsetof`) | B | None (compiler-provided) | C11 7.19 |
 | `stdint.h` | Fixed-width integer types (`uint32_t`, `int64_t`) | B | None (compiler-provided) | C11 7.20 |
-| `stdio.h` | Buffered I/O (`FILE`, `printf`, `fopen`) | U | `trx_fs_open` (40), `trx_fs_read` (42), `trx_fs_write` (43), `trx_fs_close` (41), `trx_fs_seek` (44) | POSIX stdio.h |
-| `stdlib.h` | General utilities (`malloc`, `exit`, `atoi`, `qsort`) | U | `trx_mem_alloc` (20) for malloc backing; `trx_process_exit` (1) for exit | POSIX stdlib.h |
+| `stdio.h` | Buffered I/O (`FILE`, `printf`, `fopen`) | U | `GEN_SYS_OPEN` (0x0009), `GEN_SYS_READ` (0x0002), `GEN_SYS_WRITE` (0x0001), `GEN_SYS_CLOSE` (0x000A), `GEN_SYS_LSEEK` (0x000D) | POSIX stdio.h |
+| `stdlib.h` | General utilities (`malloc`, `exit`, `atoi`, `qsort`) | U | `GEN_SYS_MMAP` (0x0003) for malloc backing; `GEN_SYS_EXIT` (0x0000) for exit | POSIX stdlib.h |
 | `string.h` | String/memory operations (`memcpy`, `strlen`, `strcmp`) | B | None (delegates to kernel-libs primitives via @cImport or Zig std.mem) | C11 7.24 |
 | `strings.h` | BSD string functions (`strcasecmp`, `bzero`) | U | None (pure computation) | POSIX strings.h |
-| `time.h` | Time types and functions (`time_t`, `clock_gettime`) | U | `trx_clock_gettime` (87), `trx_sleep` (88) | POSIX time.h |
+| `time.h` | Time types and functions (`time_t`, `clock_gettime`) | U | `GEN_SYS_CLOCK_GETTIME` (0x0008), `GEN_SYS_SLEEP` (0x0007) | POSIX time.h |
 | `wchar.h` | Wide character support (stub — ASCII only) | U | None | C11 7.29 |
 
 ### POSIX system headers
 
 | Header | Purpose | Scope | Backed by | POSIX ref |
 |--------|---------|-------|-----------|-----------|
-| `unistd.h` | POSIX system calls (`read`, `write`, `close`, `fork`, `exec`) | U | `trx_fs_read` (42), `trx_fs_write` (43), `trx_fs_close` (41), `trx_fs_seek` (44), `trx_process_create` (0), `trx_process_exec` (8) | POSIX unistd.h |
+| `unistd.h` | POSIX system calls (`read`, `write`, `close`, `fork`, `exec`) | U | `GEN_SYS_READ` (0x0002), `GEN_SYS_WRITE` (0x0001), `GEN_SYS_CLOSE` (0x000A), `GEN_SYS_LSEEK` (0x000D), `GEN_SYS_TRX_PROCESS_CREATE` (0x0100), `GEN_SYS_EXEC` (0x0013) | POSIX unistd.h |
 | `fcntl.h` | File control (`open`, `fcntl`, `O_RDONLY`) | U | `trx_fs_open` (40) | POSIX fcntl.h |
-| `pthread.h` | POSIX threads (`pthread_create`, `pthread_mutex_*`) | U | `trx_thread_create` (10), `trx_thread_exit` (11), `trx_thread_join` (12), `trx_futex_wait` (17), `trx_futex_wake` (18) | POSIX pthread.h |
-| `sched.h` | Scheduling (`sched_yield`) | U | `trx_thread_yield` (13), `trx_thread_set_affinity` (14) | POSIX sched.h |
+| `pthread.h` | POSIX threads (`pthread_create`, `pthread_mutex_*`) | U | `GEN_SYS_TRX_THREAD_CREATE` (0x0110), `GEN_SYS_TRX_THREAD_EXIT` (0x0111), `GEN_SYS_TRX_THREAD_JOIN` (0x0112), `GEN_SYS_TRX_FUTEX_WAIT` (0x0117), `GEN_SYS_TRX_FUTEX_WAKE` (0x0118) | POSIX pthread.h |
+| `sched.h` | Scheduling (`sched_yield`) | U | `GEN_SYS_YIELD` (0x0005), `GEN_SYS_TRX_THREAD_SET_AFFINITY` (0x0114) | POSIX sched.h |
 | `semaphore.h` | POSIX semaphores (`sem_wait`, `sem_post`) | U | Built on `trx_futex_wait`/`trx_futex_wake` (userspace atomics + kernel fallback) | POSIX semaphore.h |
-| `signal.h` | Signal handling (`sigaction`, `kill`, `raise`) | U | `trx_process_kill` (3) requires `cap::process::signal`; dispatch via `trx_signal_wait` (37) | POSIX signal.h |
-| `poll.h` | I/O multiplexing (`poll`) | U | `trx_channel_poll` (34) or `trx_event_wait_many` (39) | POSIX poll.h |
+| `signal.h` | Signal handling (`sigaction`, `kill`, `raise`) | U | `GEN_SYS_TRX_PROCESS_KILL` (0x0103) requires `cap::process::signal`; dispatch via `GEN_SYS_TRX_SIGNAL_WAIT` (0x0137) | POSIX signal.h |
+| `poll.h` | I/O multiplexing (`poll`) | U | `GEN_SYS_TRX_CHANNEL_POLL` (0x0134) or `GEN_SYS_TRX_EVENT_WAIT_MANY` (0x0139) | POSIX poll.h |
 
 ### System type and stat headers
 
 | Header | Purpose | Scope | Backed by | POSIX ref |
 |--------|---------|-------|-----------|-----------|
 | `sys/types.h` | Primitive system types (`pid_t`, `off_t`, `ssize_t`, `mode_t`) | B | Defines ABI types matching kernel expectations (pid_t = int64_t per TerranoxOS) | POSIX sys/types.h |
-| `sys/stat.h` | File status (`stat`, `fstat`, `mkdir`, `mode_t`) | U | `trx_fs_stat` (45), `trx_fs_fstat` (46), `trx_fs_mkdir` (47) | POSIX sys/stat.h |
-| `sys/mman.h` | Memory mapping (`mmap`, `munmap`, `mprotect`) | U | `trx_mem_alloc` (20), `trx_mem_free` (21), `trx_mem_protect` (22), `trx_mem_map` (23) | POSIX sys/mman.h |
-| `sys/wait.h` | Process wait (`waitpid`, `WEXITSTATUS`) | U | `trx_process_wait` (2) | POSIX sys/wait.h |
-| `sys/select.h` | I/O multiplexing (`select`, `FD_SET`) | U | Wrapper around `trx_event_wait_many` (39) | POSIX sys/select.h |
-| `sys/socket.h` | Socket API (`socket`, `bind`, `connect`, `sockaddr`) | U | `trx_net_socket` (80), `trx_net_bind` (81), `trx_net_connect` (84) | POSIX sys/socket.h |
+| `sys/stat.h` | File status (`stat`, `fstat`, `mkdir`, `mode_t`) | U | `GEN_SYS_STAT` (0x000B), `GEN_SYS_FSTAT` (0x000C), `GEN_SYS_TRX_FS_MKDIR` (0x0147) | POSIX sys/stat.h |
+| `sys/mman.h` | Memory mapping (`mmap`, `munmap`, `mprotect`) | U | `GEN_SYS_MMAP` (0x0003), `GEN_SYS_MUNMAP` (0x0004), `GEN_SYS_TRX_MEM_PROTECT` (0x0122), `GEN_SYS_TRX_MEM_MAP` (0x0123) | POSIX sys/mman.h |
+| `sys/wait.h` | Process wait (`waitpid`, `WEXITSTATUS`) | U | `GEN_SYS_WAIT` (0x0014) | POSIX sys/wait.h |
+| `sys/select.h` | I/O multiplexing (`select`, `FD_SET`) | U | Wrapper around `GEN_SYS_TRX_EVENT_WAIT_MANY` (0x0139) | POSIX sys/select.h |
+| `sys/socket.h` | Socket API (`socket`, `bind`, `connect`, `sockaddr`) | U | `GEN_SYS_TRX_NET_SOCKET` (0x0180), `GEN_SYS_TRX_NET_BIND` (0x0181), `GEN_SYS_TRX_NET_CONNECT` (0x0184) | POSIX sys/socket.h |
 | `sys/un.h` | Unix domain socket address (`sockaddr_un`) | U | `trx_net_socket` with local domain | POSIX sys/un.h |
 | `sys/uio.h` | Scatter/gather I/O (`readv`, `writev`, `iovec`) | U | Composed from `trx_fs_read`/`trx_fs_write` in a loop | POSIX sys/uio.h |
 | `sys/ioctl.h` | Device I/O control (stub — returns -ENOTTY) | U | NOT backed — TerranoxOS uses per-subsystem syscalls instead | POSIX sys/ioctl.h |
-| `sys/time.h` | Time types (`timeval`, `gettimeofday`) | U | `trx_clock_gettime` (87) | POSIX sys/time.h |
+| `sys/time.h` | Time types (`timeval`, `gettimeofday`) | U | `GEN_SYS_CLOCK_GETTIME` (0x0008) | POSIX sys/time.h |
 
 ### Network headers
 
@@ -156,11 +156,11 @@ No manual constant duplication. If the kernel adds or renumbers syscalls (like t
 |--------|---------|-------|-----------|
 | `terranox/syscall.h` | Raw syscall wrappers (`trx_syscall0..6`) | B | Direct SYSCALL instruction |
 | `terranox/types.h` | Re-export of genesis_trx_types.h structs | B | ABI struct definitions |
-| `terranox/capability.h` | Capability grant/revoke/query API | U | `trx_process_cap_grant` (5), `trx_process_cap_revoke` (6), `trx_process_cap_query` (7) |
-| `terranox/display.h` | Display/compositor/surface/buffer API | U | Syscalls 50-59 |
-| `terranox/input.h` | Input device enumeration and event reading | U | Syscalls 60-68 |
-| `terranox/gpu.h` | GPU render nodes, buffer objects, command submission | U | Syscalls 70-79 |
-| `terranox/ipc.h` | Channel-based IPC, signals, event multiplexer | U | Syscalls 30-39 |
+| `terranox/capability.h` | Capability grant/revoke/query API | U | `GEN_SYS_TRX_PROCESS_CAP_GRANT` (0x0105), `_REVOKE` (0x0106), `_QUERY` (0x0107) |
+| `terranox/display.h` | Display/compositor/surface/buffer API | U | `GEN_SYS_TRX_DISPLAY_*` / `_COMPOSITOR_*` / `_SURFACE_*` / `_BUFFER_*` (0x0150-0x0159) |
+| `terranox/input.h` | Input device enumeration and event reading | U | `GEN_SYS_TRX_INPUT_*` / `_TOUCH_*` (0x0160-0x0168) |
+| `terranox/gpu.h` | GPU render nodes, buffer objects, command submission | U | `GEN_SYS_TRX_GPU_*` (0x0170-0x0179) |
+| `terranox/ipc.h` | Channel-based IPC, signals, event multiplexer | U | `GEN_SYS_TRX_CHANNEL_*` / `_SIGNAL_*` / `_EVENT_*` (0x0130-0x0139) |
 
 ### Dependency diagram
 
@@ -391,7 +391,7 @@ Mutex: three-state futex (Drepper algorithm). TLS: manual via FS register (x86_6
 
 ## Phase 4: Networking (Week 9-10, ~1,500 LOC)
 
-Direct mapping to trx_net_* syscalls (80-86). Plus poll/select via trx_event_wait_many (39). getaddrinfo numeric-only initially.
+Direct mapping to `GEN_SYS_TRX_NET_*` syscalls (0x0180-0x0186). Plus poll/select via `GEN_SYS_TRX_EVENT_WAIT_MANY` (0x0139). getaddrinfo numeric-only initially.
 
 ---
 

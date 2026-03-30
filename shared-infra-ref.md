@@ -182,28 +182,37 @@ trx-cap/
     └── test_cap.rs      # Kani proof harnesses + unit tests
 ```
 
-**Key types:**
+**Key types (updated v0.2.0 — 128-bit hierarchical model from PR #13):**
 ```rust
-#[repr(u32)]
-pub enum Cap {
-    FsRead      = 1 << 0,   // Read filesystem
-    FsWrite     = 1 << 1,   // Write filesystem
-    NetConnect  = 1 << 2,   // Outbound network
-    NetBind     = 1 << 3,   // Listen on port
-    Spawn       = 1 << 4,   // Create child process
-    Debug       = 1 << 5,   // Debugging / tracing
-    DrmMaster   = 1 << 6,   // GPU / display access
-    InputRaw    = 1 << 7,   // Raw input device access
-    Audio       = 1 << 8,   // Audio device access
-    NetAdmin    = 1 << 9,   // Network configuration
-    // ... up to bit 31
+/// 128-bit domain-partitioned capability bitmask.
+/// 12 domains, 40 leaf capabilities. Hierarchy resolved at compile time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct TrxCapSet {
+    pub lo: u64,  // domains 0-7: process, memory, thread, ipc, fs, io, display, input
+    pub hi: u64,  // domains 8-11: gpu, net, time, system
 }
 
-pub type CapSet = u32;  // Bitmask of Cap values
+// 40 leaf capabilities across 12 domains:
+// lo[0..3]   process: create, signal, inspect, manage
+// lo[4..7]   memory:  alloc, map, share, dma
+// lo[8..10]  thread:  create, join, affinity
+// lo[11..13] ipc:     channel, signal, event
+// lo[14..17] fs:      read, write, create, delete
+// lo[18..20] io:      port, irq, mmio
+// lo[21..24] display: compositor, surface, buffer, mode
+// lo[25..27] input:   keyboard, pointer, touch
+// hi[0..2]   gpu:     render, compute, alloc
+// hi[3..5]   net:     socket, bind, raw
+// hi[6..8]   time:    read, sleep, timer
+// hi[9..11]  system:  reboot, module, audit
 
-pub fn cap_check(pid: u32, required: CapSet) -> Result<(), CapError>;
-pub fn cap_derive(parent: u32, child: u32, restricted: CapSet) -> Result<(), CapError>;
+pub fn cap_check(pid: u32, required: TrxCapSet) -> Result<(), CapError>;
+pub fn cap_derive(parent: u32, child: u32, restricted: TrxCapSet) -> Result<(), CapError>;
 ```
+
+> **Note:** This replaces the original `CapSet = u32` (10 capabilities) from v0.1.0.
+> The C mirror is `TrxCapSet` in `genesis_module.h`. See `kernel-libs/genesis-abi/`.
 
 **Consumed by:**
 - TerranoxOS: every syscall dispatch checks caps (runtime)

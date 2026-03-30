@@ -1,8 +1,10 @@
 # TerranoxOS syscall reference
 
-*Version 0.1.0 — March 2026 — Antonette Caldwell*
+*Version 0.2.0 — March 2026 — Antonette Caldwell*
 
-This document serves three purposes: (1) a complete reference for the System V AMD64 ABI calling convention, (2) the Linux kernel syscall convention that TerranoxOS's kernel-libs translate to, and (3) the authoritative catalog of TerranoxOS's 91 syscalls organized by subsystem with capability requirements, designed for the full compositor desktop ecosystem.
+This document serves three purposes: (1) a complete reference for the System V AMD64 ABI calling convention, (2) the Linux kernel syscall convention that TerranoxOS's kernel-libs translate to, and (3) the authoritative catalog of TerranoxOS syscalls organized by subsystem with capability requirements, designed for the full compositor desktop ecosystem.
+
+> **Note (v0.2.0):** This document's original sequential numbering (0-95) has been reconciled with the kernel-libs ABI. The canonical syscall numbers are in `genesis_syscall.h` using hex subsystem-grouped notation (0x0100-0x01BF for TerranoxOS). See `terranoxos-syscall-reconciliation-plan.md` for the mapping. Total: 82 TerranoxOS-specific syscalls across 12 subsystem blocks, plus 23 shared, 7 RT, and 7 Hermetica = 119 total.
 
 ---
 
@@ -163,7 +165,7 @@ TerranoxOS kernel-libs follow this convention but extend it with the gap-based e
 
 ---
 
-## Part III: TerranoxOS syscall catalog (91 syscalls)
+## Part III: TerranoxOS syscall catalog (82 TRX-specific + 23 shared = 105 usable by TerranoxOS)
 
 ### Design principles
 
