@@ -75,6 +75,8 @@ typedef uint32_t GenSyscallNr;
 
 /* Subsystem 0: Process management (0x0100–0x010F) */
 #define GEN_SYS_TRX_PROCESS_CREATE     ((GenSyscallNr)0x0100)
+/* 0x0101 reserved — process_exit uses shared GEN_SYS_EXIT (0x0000) */
+/* 0x0102 reserved — process_wait uses shared GEN_SYS_WAIT (0x0014) */
 #define GEN_SYS_TRX_PROCESS_KILL       ((GenSyscallNr)0x0103)
 #define GEN_SYS_TRX_PROCESS_INFO       ((GenSyscallNr)0x0104)
 #define GEN_SYS_TRX_PROCESS_CAP_GRANT  ((GenSyscallNr)0x0105)

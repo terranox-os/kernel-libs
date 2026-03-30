@@ -66,6 +66,23 @@ _Static_assert(sizeof(GenTrxTimespec) == 16, "GenTrxTimespec must be 16 bytes");
 _Static_assert(sizeof(GenTrxGpuInfo) == 88, "GenTrxGpuInfo must be 88 bytes");
 _Static_assert(sizeof(GenTrxAuditEntry) == 48, "GenTrxAuditEntry must be 48 bytes");
 
+/* Field offset checks for ABI-critical structs (#39) */
+_Static_assert(offsetof(GenTrxAuditEntry, timestamp_ns) == 0, "AuditEntry.timestamp_ns offset");
+_Static_assert(offsetof(GenTrxAuditEntry, pid) == 8, "AuditEntry.pid offset");
+_Static_assert(offsetof(GenTrxAuditEntry, tid) == 16, "AuditEntry.tid offset");
+_Static_assert(offsetof(GenTrxAuditEntry, capability) == 24, "AuditEntry.capability offset");
+_Static_assert(offsetof(GenTrxAuditEntry, syscall_nr) == 40, "AuditEntry.syscall_nr offset");
+_Static_assert(offsetof(GenTrxAuditEntry, result) == 44, "AuditEntry.result offset");
+
+_Static_assert(offsetof(GenTrxDisplayInfo, name) == 20, "DisplayInfo.name offset");
+_Static_assert(offsetof(GenTrxDisplayInfo, _pad0) == 52, "DisplayInfo._pad0 offset");
+
+_Static_assert(offsetof(GenTrxGpuInfo, driver_name) == 24, "GpuInfo.driver_name offset");
+
+_Static_assert(offsetof(GenTrxProcessInfo, state) == 8, "ProcessInfo.state offset");
+_Static_assert(offsetof(GenTrxProcessInfo, memory_bytes) == 16, "ProcessInfo.memory_bytes offset");
+_Static_assert(offsetof(GenTrxProcessInfo, cap_count) == 32, "ProcessInfo.cap_count offset");
+
 int main(void)
 {
     /* Exercise inline helpers to verify they link */
