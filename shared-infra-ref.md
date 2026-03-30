@@ -1,5 +1,11 @@
 # TerranoxOS Ecosystem — Shared Infrastructure Architecture Reference
 
+> **Status: Partially superseded.** This document was the original architecture specification. Several sections are now stale. For the current authoritative plans, see:
+> - `terranoxos-shared-infra-plan.md` — repo structure and shared crate design
+> - `terranoxos-libc-plan.md` — Zig POSIX libc
+> - `terranoxos-zig-libc-reference.md` — Zig technical reference
+> - `genesis-abi/include/` — canonical ABI types (source of truth)
+
 Version 2.0 — March 2026
 
 ---
@@ -70,7 +76,7 @@ kernel-libs/
 │   └── pmm_proofs.c         # ACSL annotations for PMM invariants
 │
 ├── tests/
-│   ├── test_mem.c           # Host-native tests (gcc -fsanitize=address)
+│   ├── test_mem.c           # Host-native tests (clang -fsanitize=address)
 │   ├── test_str.c
 │   ├── test_kfmt.c
 │   ├── test_pmm.c
@@ -84,19 +90,19 @@ kernel-libs/
 
 ```
 # TerranoxOS, HermeticaOS, SigilVM (x86-64 freestanding)
-make TARGET=x86_64 CC=gcc CFLAGS="-ffreestanding -mno-red-zone -mcmodel=kernel -fno-pic"
+make TARGET=x86_64 CC=clang CFLAGS="-ffreestanding -mno-red-zone -mcmodel=kernel -fno-pic"
 → libkernel_x86_64.a
 
 # GenesisOS-RT (AArch64 freestanding — Raspberry Pi 5)
-make TARGET=aarch64 CC=aarch64-none-elf-gcc CFLAGS="-ffreestanding -mcpu=cortex-a76"
+make TARGET=aarch64 CC=aarch64-none-elf-clang CFLAGS="-ffreestanding -mcpu=cortex-a76"
 → libkernel_aarch64.a
 
 # GenesisOS-RT (ARM Cortex-M — STM32)
-make TARGET=cortex_m CC=arm-none-eabi-gcc CFLAGS="-ffreestanding -mcpu=cortex-m4 -mthumb"
+make TARGET=cortex_m CC=arm-none-eabi-clang CFLAGS="-ffreestanding -mcpu=cortex-m4 -mthumb"
 → libkernel_cortex_m.a
 
 # Host-native tests (Linux, for development)
-make test CC=gcc CFLAGS="-g -fsanitize=address,undefined"
+make test CC=clang CFLAGS="-g -fsanitize=address,undefined"
 → runs all tests with ASAN + UBSAN
 ```
 
