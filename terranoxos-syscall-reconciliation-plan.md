@@ -120,9 +120,9 @@ Create new header with 10 structs from the document's Appendix C, using `GenTrx`
 | `cap_t` | `GenTrxCapToken` | 16 | `{ uint64_t id; uint64_t rights; }` |
 | `cap_set_t` | `GenTrxCapTokenSet` | 8+ | Header with `count`; tokens follow in memory |
 | `process_info_t` | `GenTrxProcessInfo` | 40 | pid, state, memory, cpu_time, thread/cap counts |
-| `display_info_t` | `GenTrxDisplayInfo` | 48 | resolution, refresh, connector, name[32] |
-| `input_event_t` | `GenTrxInputEvent` | 20 | timestamp, type, code, value, device_id |
-| `touch_event_t` | `GenTrxTouchEvent` | 24 | timestamp, slot, type, x, y, pressure |
+| `display_info_t` | `GenTrxDisplayInfo` | 56 | resolution, refresh, connector, name[32], _pad0 |
+| `input_event_t` | `GenTrxInputEvent` | 24 | timestamp, type, code, value, device_id (8-byte aligned) |
+| `touch_event_t` | `GenTrxTouchEvent` | 32 | timestamp, slot, type, x, y, pressure, _pad0 |
 | `wait_item_t` | `GenTrxWaitItem` | 16 | handle, events, observed |
 | `timespec_t` | `GenTrxTimespec` | 16 | `{ int64_t tv_sec; int64_t tv_nsec; }` |
 | `gpu_info_t` | `GenTrxGpuInfo` | 88 | vendor, device, VRAM, formats, driver_name[64] |
