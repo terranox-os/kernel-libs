@@ -161,7 +161,11 @@ void *gen_slab_cache_alloc(GenSlabCache *cache)
         return (void *)0;
     }
 
-    /* Pop from free list */
+    /*
+     * Invariant: when slab->free_objs > 0, slab->free_head is guaranteed
+     * non-NULL because the embedded free list is threaded through all free
+     * objects at slab initialization (slab_init_freelist).
+     */
     void *obj = slab->free_head;
     slab->free_head = *(void **)obj;
     slab->free_objs--;
