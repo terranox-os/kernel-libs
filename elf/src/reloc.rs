@@ -37,6 +37,7 @@ impl Elf64Rela {
 }
 
 /// Parse a single RELA entry at the given offset.
+#[must_use]
 pub fn parse_elf64_rela(data: &[u8], offset: usize) -> Result<Elf64Rela, ElfError> {
     if offset + 24 > data.len() {
         return Err(ElfError::SectionOutOfBounds);
@@ -87,6 +88,7 @@ impl<'a> Iterator for RelaIter<'a> {
 ///
 /// Returns `Ok(())` on success, or `Err(ElfError)` if the relocation
 /// type is unsupported or the target offset is out of bounds.
+#[must_use]
 pub fn apply_x86_64_rela(
     target: &mut [u8],
     rela: &Elf64Rela,
