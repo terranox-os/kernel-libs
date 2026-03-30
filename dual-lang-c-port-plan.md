@@ -324,7 +324,7 @@ clang -std=c17 -o /tmp/collections_test collections/tests/collections_test.c \
 
 ## Commit strategy (git flow)
 
-New branch: `feature/dual-lang-c-ports` from `main`
+New branch: `feature/dual-lang-c-ports` (branched from `main` for v0.2.0; future work should branch from `develop`)
 
 | Commit | Content |
 |--------|---------|

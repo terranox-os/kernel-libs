@@ -51,9 +51,12 @@ typedef int32_t GenResult;
 
 /* ── I/O and hardware errors (-32 to -47) ────────────────── */
 
-#define GEN_ERR_IO             ((GenResult)-32)
-#define GEN_ERR_DEVICE_OFFLINE ((GenResult)-33)
-#define GEN_ERR_BAD_ADDRESS    ((GenResult)-34)
+#define GEN_ERR_IO              ((GenResult)-32)
+#define GEN_ERR_DEVICE_OFFLINE  ((GenResult)-33)
+#define GEN_ERR_BAD_ADDRESS     ((GenResult)-34)
+/* -35 reserved (CHANNEL_CLOSED) */
+#define GEN_ERR_DISPLAY_OFFLINE ((GenResult)-36)
+#define GEN_ERR_GPU_ERROR       ((GenResult)-37)
 
 /* ── Format / parse errors (-48 to -63) ──────────────────── */
 
@@ -80,7 +83,8 @@ typedef int32_t GenResult;
 #define GEN_ERR_BAD_SYSCALL          ((GenResult)-96)
 #define GEN_ERR_BAD_HANDLE           ((GenResult)-97)
 #define GEN_ERR_SYSCALL_INTERRUPTED  ((GenResult)-98)
-/* -99 to -111 reserved for future syscall errors */
+#define GEN_ERR_HANDLE_LIMIT         ((GenResult)-99)
+/* -100 to -111 reserved for future syscall errors */
 
 /* ── Convenience helpers ─────────────────────────────────── */
 
@@ -107,6 +111,8 @@ static inline const char *gen_result_name(GenResult r)
     case GEN_ERR_IO:                  return "IO";
     case GEN_ERR_DEVICE_OFFLINE:      return "DEVICE_OFFLINE";
     case GEN_ERR_BAD_ADDRESS:         return "BAD_ADDRESS";
+    case GEN_ERR_DISPLAY_OFFLINE:     return "DISPLAY_OFFLINE";
+    case GEN_ERR_GPU_ERROR:           return "GPU_ERROR";
     case GEN_ERR_INVALID_FORMAT:      return "INVALID_FORMAT";
     case GEN_ERR_CHECKSUM_MISMATCH:   return "CHECKSUM_MISMATCH";
     case GEN_ERR_VERSION_MISMATCH:    return "VERSION_MISMATCH";
@@ -120,7 +126,65 @@ static inline const char *gen_result_name(GenResult r)
     case GEN_ERR_BAD_SYSCALL:         return "BAD_SYSCALL";
     case GEN_ERR_BAD_HANDLE:          return "BAD_HANDLE";
     case GEN_ERR_SYSCALL_INTERRUPTED: return "SYSCALL_INTERRUPTED";
+    case GEN_ERR_HANDLE_LIMIT:        return "HANDLE_LIMIT";
     default:                          return "UNKNOWN";
+    }
+}
+
+/* ── POSIX errno values (syscall boundary) ──────────────── */
+
+#define GEN_POSIX_EPERM      1
+#define GEN_POSIX_ENOENT     2
+#define GEN_POSIX_ESRCH      3
+#define GEN_POSIX_EBADF      9
+#define GEN_POSIX_EAGAIN    11
+#define GEN_POSIX_ENOMEM    12
+#define GEN_POSIX_EACCES    13
+#define GEN_POSIX_EFAULT    14
+#define GEN_POSIX_EBUSY     16
+#define GEN_POSIX_EEXIST    17
+#define GEN_POSIX_EINVAL    22
+#define GEN_POSIX_EPIPE     32
+#define GEN_POSIX_ENOSYS    38
+#define GEN_POSIX_ETIMEDOUT 110
+
+static inline int gen_result_to_errno(GenResult r)
+{
+    switch (r) {
+    case GEN_OK:                      return 0;
+    case GEN_ERR_PERMISSION_DENIED:   return GEN_POSIX_EPERM;
+    case GEN_ERR_NOT_FOUND:           return GEN_POSIX_ENOENT;
+    case GEN_ERR_INVALID_ARG:         return GEN_POSIX_EINVAL;
+    case GEN_ERR_OUT_OF_MEMORY:       return GEN_POSIX_ENOMEM;
+    case GEN_ERR_BAD_ADDRESS:         return GEN_POSIX_EFAULT;
+    case GEN_ERR_BUSY:                return GEN_POSIX_EBUSY;
+    case GEN_ERR_ALREADY_EXISTS:      return GEN_POSIX_EEXIST;
+    case GEN_ERR_TIMEOUT:             return GEN_POSIX_ETIMEDOUT;
+    case GEN_ERR_BAD_SYSCALL:         return GEN_POSIX_ENOSYS;
+    case GEN_ERR_BAD_HANDLE:          return GEN_POSIX_EBADF;
+    case GEN_ERR_IO:                  return GEN_POSIX_EPIPE;
+    case GEN_ERR_NOT_SUPPORTED:       return GEN_POSIX_ENOSYS;
+    case GEN_ERR_ACCESS_VIOLATION:    return GEN_POSIX_EACCES;
+    case GEN_ERR_INVALID_CAPABILITY:  return GEN_POSIX_EPERM;
+    case GEN_ERR_BUFFER_TOO_SMALL:    return GEN_POSIX_EINVAL;
+    case GEN_ERR_INTERRUPTED:         return GEN_POSIX_EAGAIN;
+    case GEN_ERR_INVALID_FORMAT:      return GEN_POSIX_EINVAL;
+    case GEN_ERR_SYSCALL_INTERRUPTED: return GEN_POSIX_EAGAIN;
+    case GEN_ERR_DEVICE_OFFLINE:      return GEN_POSIX_ENOENT;
+    case GEN_ERR_DISPLAY_OFFLINE:     return GEN_POSIX_ENOENT;
+    case GEN_ERR_GPU_ERROR:           return GEN_POSIX_EPIPE;
+    case GEN_ERR_OVERFLOW:            return GEN_POSIX_EINVAL;
+    case GEN_ERR_CHECKSUM_MISMATCH:   return GEN_POSIX_EINVAL;
+    case GEN_ERR_VERSION_MISMATCH:    return GEN_POSIX_EINVAL;
+    case GEN_ERR_MODULE_LOAD_FAILED:  return GEN_POSIX_ENOENT;
+    case GEN_ERR_MODULE_INIT_FAILED:  return GEN_POSIX_EPERM;
+    case GEN_ERR_MODULE_NOT_FOUND:    return GEN_POSIX_ENOENT;
+    case GEN_ERR_MODULE_INCOMPATIBLE: return GEN_POSIX_EINVAL;
+    case GEN_ERR_DEADLINE_MISS:       return GEN_POSIX_ETIMEDOUT;
+    case GEN_ERR_PRIORITY_INV:        return GEN_POSIX_EAGAIN;
+    case GEN_ERR_STACK_OVERFLOW:      return GEN_POSIX_ENOMEM;
+    case GEN_ERR_HANDLE_LIMIT:        return GEN_POSIX_ENOMEM;
+    default:                          return GEN_POSIX_EINVAL;
     }
 }
 

@@ -59,6 +59,72 @@ static inline int gen_cap_contains(GenCapability set, GenCapability cap)
     return (set & cap) == cap;
 }
 
+/* ── TrxCapSet: 128-bit hierarchical capabilities ───────── */
+
+/*
+ * TrxCapSet: 128-bit domain-partitioned capability bitmask.
+ * 12 domains, 40 leaf capabilities. Hierarchy resolved at compile time.
+ *
+ * lo word (bits 0-63):
+ *   0-3   process: create, signal, inspect, manage
+ *   4-7   memory:  alloc, map, share, dma
+ *   8-10  thread:  create, join, affinity
+ *   11-13 ipc:     channel, signal, event
+ *   14-17 fs:      read, write, create, delete
+ *   18-20 io:      port, irq, mmio
+ *   21-24 display: compositor, surface, buffer, mode
+ *   25-27 input:   keyboard, pointer, touch
+ *
+ * hi word (bits 0-63):
+ *   0-2   gpu:     render, compute, alloc
+ *   3-5   net:     socket, bind, raw
+ *   6-8   time:    read, sleep, timer
+ *   9-11  system:  reboot, module, audit
+ */
+typedef struct TrxCapSet {
+    uint64_t lo;
+    uint64_t hi;
+} TrxCapSet;
+
+/* Domain parent constants (lo word) */
+#define TRX_CAP_PROCESS  ((TrxCapSet){ .lo = 0xFULL,         .hi = 0 })
+#define TRX_CAP_MEMORY   ((TrxCapSet){ .lo = 0xF0ULL,        .hi = 0 })
+#define TRX_CAP_THREAD   ((TrxCapSet){ .lo = 0x700ULL,       .hi = 0 })
+#define TRX_CAP_IPC      ((TrxCapSet){ .lo = 0x3800ULL,      .hi = 0 })
+#define TRX_CAP_FS       ((TrxCapSet){ .lo = 0x3C000ULL,     .hi = 0 })
+#define TRX_CAP_IO       ((TrxCapSet){ .lo = 0x1C0000ULL,    .hi = 0 })
+#define TRX_CAP_DISPLAY  ((TrxCapSet){ .lo = 0x1E00000ULL,   .hi = 0 })
+#define TRX_CAP_INPUT    ((TrxCapSet){ .lo = 0xE000000ULL,   .hi = 0 })
+
+/* Domain parent constants (hi word) */
+#define TRX_CAP_GPU      ((TrxCapSet){ .lo = 0, .hi = 0x7ULL })
+#define TRX_CAP_NET      ((TrxCapSet){ .lo = 0, .hi = 0x38ULL })
+#define TRX_CAP_TIME     ((TrxCapSet){ .lo = 0, .hi = 0x1C0ULL })
+#define TRX_CAP_SYSTEM   ((TrxCapSet){ .lo = 0, .hi = 0xE00ULL })
+
+#define TRX_CAP_NONE     ((TrxCapSet){ .lo = 0, .hi = 0 })
+#define TRX_CAP_ROOT     ((TrxCapSet){ .lo = 0xFFFFFFFULL, .hi = 0xFFFULL })
+
+static inline int trx_cap_contains(TrxCapSet set, TrxCapSet cap)
+{
+    return (set.lo & cap.lo) == cap.lo && (set.hi & cap.hi) == cap.hi;
+}
+
+static inline TrxCapSet trx_cap_union(TrxCapSet a, TrxCapSet b)
+{
+    return (TrxCapSet){ .lo = a.lo | b.lo, .hi = a.hi | b.hi };
+}
+
+static inline TrxCapSet trx_cap_intersection(TrxCapSet a, TrxCapSet b)
+{
+    return (TrxCapSet){ .lo = a.lo & b.lo, .hi = a.hi & b.hi };
+}
+
+static inline TrxCapSet trx_cap_difference(TrxCapSet a, TrxCapSet b)
+{
+    return (TrxCapSet){ .lo = a.lo & ~b.lo, .hi = a.hi & ~b.hi };
+}
+
 /* ── Kernel API table ────────────────────────────────────── */
 
 /*
@@ -103,7 +169,7 @@ typedef struct GenKernelAPI {
 #define GEN_MODULE_SECTION  ".gen_module"
 
 typedef GenResult (*GenModuleInitFn)(const GenKernelAPI *api);
-typedef void      (*GenModuleFiniFinFn)(void);
+typedef void      (*GenModuleFiniFn)(void);
 
 /*
  * GenModuleDescriptor: Placed in a well-known ELF section by modules.
@@ -127,7 +193,7 @@ typedef struct GenModuleDescriptor {
     GenCapability     optional_caps;
 
     GenModuleInitFn   init;
-    GenModuleFiniFinFn fini;
+    GenModuleFiniFn fini;
 } GenModuleDescriptor;
 
 /*

@@ -7,7 +7,7 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
 pub mod parser;
-pub mod symbols;
 pub mod reloc;
+pub mod symbols;
 
 pub use parser::*;

@@ -8,5 +8,5 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
 pub mod crc32;
-pub mod sha256;
 pub mod hmac;
+pub mod sha256;
