@@ -264,7 +264,7 @@ typedef struct GenKernelAPI {
 #define GEN_MODULE_SECTION  ".gen_module"
 
 typedef GenResult (*GenModuleInitFn)(const GenKernelAPI *api);
-typedef void      (*GenModuleFiniFinFn)(void);
+typedef void      (*GenModuleFiniFn)(void);
 
 /*
  * GenModuleDescriptor: Placed in a well-known ELF section by modules.
@@ -288,7 +288,7 @@ typedef struct GenModuleDescriptor {
     GenCapability     optional_caps;
 
     GenModuleInitFn   init;
-    GenModuleFiniFinFn fini;
+    GenModuleFiniFn fini;
 } GenModuleDescriptor;
 
 /*

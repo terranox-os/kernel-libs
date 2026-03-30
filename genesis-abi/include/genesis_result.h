@@ -184,7 +184,21 @@ static inline int gen_result_to_errno(GenResult r)
     case GEN_ERR_BAD_SYSCALL:         return GEN_POSIX_ENOSYS;
     case GEN_ERR_BAD_HANDLE:          return GEN_POSIX_EBADF;
     case GEN_ERR_SYSCALL_INTERRUPTED: return GEN_POSIX_EAGAIN;
+    case GEN_ERR_DEVICE_OFFLINE:       return GEN_POSIX_ENOENT;
     case GEN_ERR_CHANNEL_CLOSED:      return GEN_POSIX_EPIPE;
+    case GEN_ERR_DISPLAY_OFFLINE:     return GEN_POSIX_ENOENT;
+    case GEN_ERR_GPU_ERROR:           return GEN_POSIX_EPIPE;
+    case GEN_ERR_INVALID_FORMAT:      return GEN_POSIX_EINVAL;
+    case GEN_ERR_CHECKSUM_MISMATCH:   return GEN_POSIX_EINVAL;
+    case GEN_ERR_VERSION_MISMATCH:    return GEN_POSIX_EINVAL;
+    case GEN_ERR_MODULE_LOAD_FAILED:  return GEN_POSIX_ENOENT;
+    case GEN_ERR_MODULE_INIT_FAILED:  return GEN_POSIX_EPERM;
+    case GEN_ERR_MODULE_NOT_FOUND:    return GEN_POSIX_ENOENT;
+    case GEN_ERR_MODULE_INCOMPATIBLE: return GEN_POSIX_EINVAL;
+    case GEN_ERR_DEADLINE_MISS:       return GEN_POSIX_ETIMEDOUT;
+    case GEN_ERR_PRIORITY_INV:        return GEN_POSIX_EAGAIN;
+    case GEN_ERR_STACK_OVERFLOW:      return GEN_POSIX_ENOMEM;
+    case GEN_ERR_HANDLE_LIMIT:        return GEN_POSIX_ENOMEM;
     default:                          return GEN_POSIX_EINVAL;
     }
 }

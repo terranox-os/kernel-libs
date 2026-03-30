@@ -158,10 +158,24 @@ impl GenResult {
             -18 => posix_errno::EPERM,    // INVALID_CAPABILITY
             -32 => posix_errno::EPIPE,    // IO
             -34 => posix_errno::EFAULT,   // BAD_ADDRESS
+            -33 => posix_errno::ENOENT,    // DEVICE_OFFLINE
             -35 => posix_errno::EPIPE,    // CHANNEL_CLOSED
+            -36 => posix_errno::ENOENT,   // DISPLAY_OFFLINE
+            -37 => posix_errno::EPIPE,    // GPU_ERROR
+            -48 => posix_errno::EINVAL,   // INVALID_FORMAT
+            -49 => posix_errno::EINVAL,   // CHECKSUM_MISMATCH
+            -50 => posix_errno::EINVAL,   // VERSION_MISMATCH
+            -64 => posix_errno::ENOENT,   // MODULE_LOAD_FAILED
+            -65 => posix_errno::EPERM,    // MODULE_INIT_FAILED
+            -66 => posix_errno::ENOENT,   // MODULE_NOT_FOUND
+            -67 => posix_errno::EINVAL,   // MODULE_INCOMPATIBLE
+            -80 => posix_errno::ETIMEDOUT, // DEADLINE_MISS
+            -81 => posix_errno::EAGAIN,   // PRIORITY_INV
+            -82 => posix_errno::ENOMEM,   // STACK_OVERFLOW
             -96 => posix_errno::ENOSYS,   // BAD_SYSCALL
             -97 => posix_errno::EBADF,    // BAD_HANDLE
             -98 => posix_errno::EAGAIN,   // SYSCALL_INTERRUPTED
+            -99 => posix_errno::ENOMEM,   // HANDLE_LIMIT
             _ => posix_errno::EINVAL,
         }
     }
@@ -1499,6 +1513,26 @@ mod tests {
         assert!(trx_cap::ROOT.contains(trx_cap::NET));
         assert!(trx_cap::ROOT.contains(trx_cap::TIME));
         assert!(trx_cap::ROOT.contains(trx_cap::SYSTEM));
+    }
+
+    #[test]
+    fn trx_capset_root_is_complete() {
+        let computed = trx_cap::PROCESS
+            .union(trx_cap::MEMORY)
+            .union(trx_cap::THREAD)
+            .union(trx_cap::IPC)
+            .union(trx_cap::FS)
+            .union(trx_cap::IO)
+            .union(trx_cap::DISPLAY)
+            .union(trx_cap::INPUT)
+            .union(trx_cap::GPU)
+            .union(trx_cap::NET)
+            .union(trx_cap::TIME)
+            .union(trx_cap::SYSTEM);
+        assert_eq!(
+            computed, trx_cap::ROOT,
+            "ROOT must equal union of all 12 domain parents"
+        );
     }
 
     #[test]
