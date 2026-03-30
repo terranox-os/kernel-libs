@@ -14,8 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **sync**: C implementations using C11 atomics — ticket spinlock, one-time initialization, atomic bitmap operations
 - **collections**: C implementations of intrusive doubly-linked list and red-black tree (CLRS algorithm) — 17 C tests including 100-node stress test
 
-- Updated test totals: 149 Rust + 144 C = 293 tests
-
 All new C code is dual-language alongside existing Rust implementations. Enables direct consumption by GenesisOS-RT and HermeticaOS without FFI overhead.
 
 ## [0.1.0] - 2026-03-22

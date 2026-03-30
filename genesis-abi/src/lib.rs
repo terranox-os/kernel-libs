@@ -39,9 +39,6 @@ impl GenResult {
     pub const ERR_IO: Self = Self(-32);
     pub const ERR_DEVICE_OFFLINE: Self = Self(-33);
     pub const ERR_BAD_ADDRESS: Self = Self(-34);
-    // -35 reserved (CHANNEL_CLOSED)
-    pub const ERR_DISPLAY_OFFLINE: Self = Self(-36);
-    pub const ERR_GPU_ERROR: Self = Self(-37);
 
     // Format / parse errors (-48 to -63)
     pub const ERR_INVALID_FORMAT: Self = Self(-48);
@@ -63,7 +60,6 @@ impl GenResult {
     pub const ERR_BAD_SYSCALL: Self = Self(-96);
     pub const ERR_BAD_HANDLE: Self = Self(-97);
     pub const ERR_SYSCALL_INTERRUPTED: Self = Self(-98);
-    pub const ERR_HANDLE_LIMIT: Self = Self(-99);
 
     #[inline]
     pub const fn is_ok(self) -> bool {
@@ -73,46 +69,6 @@ impl GenResult {
     #[inline]
     pub const fn is_error(self) -> bool {
         self.0 < 0
-    }
-
-    /// Map a GenResult to a POSIX errno value (for the syscall boundary).
-    #[inline]
-    pub const fn to_errno(self) -> i32 {
-        match self.0 {
-            0 => 0,
-            -16 => posix_errno::EPERM,     // PERMISSION_DENIED
-            -3 => posix_errno::ENOENT,     // NOT_FOUND
-            -1 => posix_errno::EINVAL,     // INVALID_ARG
-            -2 => posix_errno::ENOMEM,     // OUT_OF_MEMORY
-            -34 => posix_errno::EFAULT,    // BAD_ADDRESS
-            -7 => posix_errno::EBUSY,      // BUSY
-            -4 => posix_errno::EEXIST,     // ALREADY_EXISTS
-            -8 => posix_errno::ETIMEDOUT,  // TIMEOUT
-            -96 => posix_errno::ENOSYS,    // BAD_SYSCALL
-            -97 => posix_errno::EBADF,     // BAD_HANDLE
-            -32 => posix_errno::EPIPE,     // IO
-            -6 => posix_errno::ENOSYS,     // NOT_SUPPORTED
-            -17 => posix_errno::EACCES,    // ACCESS_VIOLATION
-            -18 => posix_errno::EPERM,     // INVALID_CAPABILITY
-            -5 => posix_errno::EINVAL,     // BUFFER_TOO_SMALL
-            -9 => posix_errno::EAGAIN,     // INTERRUPTED
-            -48 => posix_errno::EINVAL,    // INVALID_FORMAT
-            -98 => posix_errno::EAGAIN,    // SYSCALL_INTERRUPTED
-            -33 => posix_errno::ENOENT,    // DEVICE_OFFLINE
-            -36 => posix_errno::ENOENT,    // DISPLAY_OFFLINE
-            -37 => posix_errno::EPIPE,     // GPU_ERROR
-            -49 => posix_errno::EINVAL,    // CHECKSUM_MISMATCH
-            -50 => posix_errno::EINVAL,    // VERSION_MISMATCH
-            -64 => posix_errno::ENOENT,    // MODULE_LOAD_FAILED
-            -65 => posix_errno::EPERM,     // MODULE_INIT_FAILED
-            -66 => posix_errno::ENOENT,    // MODULE_NOT_FOUND
-            -67 => posix_errno::EINVAL,    // MODULE_INCOMPATIBLE
-            -80 => posix_errno::ETIMEDOUT, // DEADLINE_MISS
-            -81 => posix_errno::EAGAIN,    // PRIORITY_INV
-            -82 => posix_errno::ENOMEM,    // STACK_OVERFLOW
-            -99 => posix_errno::ENOMEM,    // HANDLE_LIMIT
-            _ => posix_errno::EINVAL,
-        }
     }
 
     /// Returns the error name as a static string slice.
@@ -136,8 +92,6 @@ impl GenResult {
             -32 => "IO",
             -33 => "DEVICE_OFFLINE",
             -34 => "BAD_ADDRESS",
-            -36 => "DISPLAY_OFFLINE",
-            -37 => "GPU_ERROR",
             -48 => "INVALID_FORMAT",
             -49 => "CHECKSUM_MISMATCH",
             -50 => "VERSION_MISMATCH",
@@ -151,31 +105,9 @@ impl GenResult {
             -96 => "BAD_SYSCALL",
             -97 => "BAD_HANDLE",
             -98 => "SYSCALL_INTERRUPTED",
-            -99 => "HANDLE_LIMIT",
             _ => "UNKNOWN",
         }
     }
-}
-
-// ────────────────────────────────────────────────────────────
-// POSIX errno constants — mirrors GEN_POSIX_* in genesis_result.h
-// ────────────────────────────────────────────────────────────
-
-pub mod posix_errno {
-    pub const EPERM: i32 = 1;
-    pub const ENOENT: i32 = 2;
-    pub const ESRCH: i32 = 3;
-    pub const EBADF: i32 = 9;
-    pub const EAGAIN: i32 = 11;
-    pub const ENOMEM: i32 = 12;
-    pub const EACCES: i32 = 13;
-    pub const EFAULT: i32 = 14;
-    pub const EBUSY: i32 = 16;
-    pub const EEXIST: i32 = 17;
-    pub const EINVAL: i32 = 22;
-    pub const EPIPE: i32 = 32;
-    pub const ENOSYS: i32 = 38;
-    pub const ETIMEDOUT: i32 = 110;
 }
 
 // ────────────────────────────────────────────────────────────
@@ -335,89 +267,6 @@ impl GenCapability {
     }
 }
 
-// ────────────────────────────────────────────────────────────
-// TrxCapSet — 128-bit hierarchical capabilities (mirrors genesis_module.h)
-// ────────────────────────────────────────────────────────────
-
-/// 128-bit domain-partitioned capability bitmask.
-/// 12 domains, 40 leaf capabilities. Hierarchy resolved at compile time.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[repr(C)]
-pub struct TrxCapSet {
-    pub lo: u64,
-    pub hi: u64,
-}
-
-pub mod trx_cap {
-    use super::TrxCapSet;
-
-    // Domain parent constants (lo word)
-    pub const PROCESS: TrxCapSet = TrxCapSet { lo: 0xF, hi: 0 };
-    pub const MEMORY: TrxCapSet = TrxCapSet { lo: 0xF0, hi: 0 };
-    pub const THREAD: TrxCapSet = TrxCapSet { lo: 0x700, hi: 0 };
-    pub const IPC: TrxCapSet = TrxCapSet { lo: 0x3800, hi: 0 };
-    pub const FS: TrxCapSet = TrxCapSet { lo: 0x3C000, hi: 0 };
-    pub const IO: TrxCapSet = TrxCapSet {
-        lo: 0x1C0000,
-        hi: 0,
-    };
-    pub const DISPLAY: TrxCapSet = TrxCapSet {
-        lo: 0x1E00000,
-        hi: 0,
-    };
-    pub const INPUT: TrxCapSet = TrxCapSet {
-        lo: 0xE000000,
-        hi: 0,
-    };
-
-    // Domain parent constants (hi word)
-    pub const GPU: TrxCapSet = TrxCapSet { lo: 0, hi: 0x7 };
-    pub const NET: TrxCapSet = TrxCapSet { lo: 0, hi: 0x38 };
-    pub const TIME: TrxCapSet = TrxCapSet { lo: 0, hi: 0x1C0 };
-    pub const SYSTEM: TrxCapSet = TrxCapSet { lo: 0, hi: 0xE00 };
-
-    pub const NONE: TrxCapSet = TrxCapSet { lo: 0, hi: 0 };
-    pub const ROOT: TrxCapSet = TrxCapSet {
-        lo: 0xFFF_FFFF,
-        hi: 0xFFF,
-    };
-}
-
-impl TrxCapSet {
-    /// Check if this capability set contains a specific capability.
-    #[inline]
-    pub const fn contains(self, cap: Self) -> bool {
-        (self.lo & cap.lo) == cap.lo && (self.hi & cap.hi) == cap.hi
-    }
-
-    /// Combine two capability sets (bitwise OR).
-    #[inline]
-    pub const fn union(self, other: Self) -> Self {
-        Self {
-            lo: self.lo | other.lo,
-            hi: self.hi | other.hi,
-        }
-    }
-
-    /// Intersect two capability sets (bitwise AND).
-    #[inline]
-    pub const fn intersection(self, other: Self) -> Self {
-        Self {
-            lo: self.lo & other.lo,
-            hi: self.hi & other.hi,
-        }
-    }
-
-    /// Remove capabilities (bitwise AND NOT).
-    #[inline]
-    pub const fn difference(self, other: Self) -> Self {
-        Self {
-            lo: self.lo & !other.lo,
-            hi: self.hi & !other.hi,
-        }
-    }
-}
-
 pub const MODULE_NAME_MAX: usize = 64;
 pub const MODULE_MAGIC: u32 = 0x47454E4D;
 pub const MODULE_SECTION: &str = ".gen_module";
@@ -530,8 +379,6 @@ mod tests {
             GenResult::ERR_IO,
             GenResult::ERR_DEVICE_OFFLINE,
             GenResult::ERR_BAD_ADDRESS,
-            GenResult::ERR_DISPLAY_OFFLINE,
-            GenResult::ERR_GPU_ERROR,
             GenResult::ERR_INVALID_FORMAT,
             GenResult::ERR_CHECKSUM_MISMATCH,
             GenResult::ERR_VERSION_MISMATCH,
@@ -545,7 +392,6 @@ mod tests {
             GenResult::ERR_BAD_SYSCALL,
             GenResult::ERR_BAD_HANDLE,
             GenResult::ERR_SYSCALL_INTERRUPTED,
-            GenResult::ERR_HANDLE_LIMIT,
         ];
         for e in errors {
             assert!(e.is_error(), "Expected error for code {}", e.0);
@@ -573,8 +419,6 @@ mod tests {
             GenResult::ERR_IO.0,
             GenResult::ERR_DEVICE_OFFLINE.0,
             GenResult::ERR_BAD_ADDRESS.0,
-            GenResult::ERR_DISPLAY_OFFLINE.0,
-            GenResult::ERR_GPU_ERROR.0,
             GenResult::ERR_INVALID_FORMAT.0,
             GenResult::ERR_CHECKSUM_MISMATCH.0,
             GenResult::ERR_VERSION_MISMATCH.0,
@@ -588,7 +432,6 @@ mod tests {
             GenResult::ERR_BAD_SYSCALL.0,
             GenResult::ERR_BAD_HANDLE.0,
             GenResult::ERR_SYSCALL_INTERRUPTED.0,
-            GenResult::ERR_HANDLE_LIMIT.0,
         ];
         for (i, &a) in codes.iter().enumerate() {
             for &b in &codes[i + 1..] {
@@ -784,71 +627,5 @@ mod tests {
     fn abi_version_constants() {
         assert_eq!(MODULE_ABI_VERSION_MAJOR, 0);
         assert_eq!(MODULE_ABI_VERSION_MINOR, 1);
-    }
-
-    // -- TrxCapSet tests --
-
-    #[test]
-    fn trx_capset_size() {
-        assert_eq!(mem::size_of::<TrxCapSet>(), 16);
-    }
-
-    #[test]
-    fn trx_capset_root_contains_all_domains() {
-        assert!(trx_cap::ROOT.contains(trx_cap::PROCESS));
-        assert!(trx_cap::ROOT.contains(trx_cap::MEMORY));
-        assert!(trx_cap::ROOT.contains(trx_cap::THREAD));
-        assert!(trx_cap::ROOT.contains(trx_cap::IPC));
-        assert!(trx_cap::ROOT.contains(trx_cap::FS));
-        assert!(trx_cap::ROOT.contains(trx_cap::IO));
-        assert!(trx_cap::ROOT.contains(trx_cap::DISPLAY));
-        assert!(trx_cap::ROOT.contains(trx_cap::INPUT));
-        assert!(trx_cap::ROOT.contains(trx_cap::GPU));
-        assert!(trx_cap::ROOT.contains(trx_cap::NET));
-        assert!(trx_cap::ROOT.contains(trx_cap::TIME));
-        assert!(trx_cap::ROOT.contains(trx_cap::SYSTEM));
-    }
-
-    #[test]
-    fn trx_capset_root_is_complete() {
-        let computed = trx_cap::PROCESS
-            .union(trx_cap::MEMORY)
-            .union(trx_cap::THREAD)
-            .union(trx_cap::IPC)
-            .union(trx_cap::FS)
-            .union(trx_cap::IO)
-            .union(trx_cap::DISPLAY)
-            .union(trx_cap::INPUT)
-            .union(trx_cap::GPU)
-            .union(trx_cap::NET)
-            .union(trx_cap::TIME)
-            .union(trx_cap::SYSTEM);
-        assert_eq!(
-            computed,
-            trx_cap::ROOT,
-            "ROOT must equal union of all 12 domain parents"
-        );
-    }
-
-    // -- Errno mapping tests --
-
-    #[test]
-    fn to_errno_ok_is_zero() {
-        assert_eq!(GenResult::OK.to_errno(), 0);
-    }
-
-    #[test]
-    fn to_errno_maps_all_codes() {
-        // Spot-check some key mappings
-        assert_eq!(
-            GenResult::ERR_PERMISSION_DENIED.to_errno(),
-            posix_errno::EPERM
-        );
-        assert_eq!(GenResult::ERR_NOT_FOUND.to_errno(), posix_errno::ENOENT);
-        assert_eq!(GenResult::ERR_OUT_OF_MEMORY.to_errno(), posix_errno::ENOMEM);
-        assert_eq!(GenResult::ERR_BAD_SYSCALL.to_errno(), posix_errno::ENOSYS);
-        assert_eq!(GenResult::ERR_BAD_HANDLE.to_errno(), posix_errno::EBADF);
-        assert_eq!(GenResult::ERR_TIMEOUT.to_errno(), posix_errno::ETIMEDOUT);
-        assert_eq!(GenResult::ERR_HANDLE_LIMIT.to_errno(), posix_errno::ENOMEM);
     }
 }

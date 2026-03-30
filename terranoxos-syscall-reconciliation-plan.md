@@ -456,7 +456,7 @@ Syscalls that overlap with the shared range (exit, read, write, open, close, sta
 cargo test -p genesis-abi                          # all Rust tests
 cargo test -p genesis-abi --features result-names  # feature-gated
 cargo clippy -- -D warnings                        # lint
-clang -ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic \
+gcc -ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic \
     -Igenesis-abi/include genesis-abi/tests/compile_test.c -o /dev/null
 ./scripts/frama-c-verify.sh --check-only           # ACSL parse
 ```

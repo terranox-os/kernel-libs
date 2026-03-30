@@ -22,8 +22,8 @@ pub enum AcpiError {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rsdp {
     pub revision: u8,
-    pub rsdt_address: u32, // ACPI 1.0
-    pub xsdt_address: u64, // ACPI 2.0+ (only if revision >= 2)
+    pub rsdt_address: u32,      // ACPI 1.0
+    pub xsdt_address: u64,      // ACPI 2.0+ (only if revision >= 2)
     pub is_xsdt_valid: bool,
 }
 
@@ -33,14 +33,8 @@ fn read_u32_le(data: &[u8], off: usize) -> u32 {
 
 fn read_u64_le(data: &[u8], off: usize) -> u64 {
     u64::from_le_bytes([
-        data[off],
-        data[off + 1],
-        data[off + 2],
-        data[off + 3],
-        data[off + 4],
-        data[off + 5],
-        data[off + 6],
-        data[off + 7],
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
     ])
 }
 
@@ -169,14 +163,11 @@ pub fn parse_madt(data: &[u8]) -> Result<(MadtHeader, MadtEntryIter<'_>), AcpiEr
         flags: read_u32_le(data, 40),
     };
 
-    Ok((
-        header,
-        MadtEntryIter {
-            data,
-            offset: 44,
-            end: table_len,
-        },
-    ))
+    Ok((header, MadtEntryIter {
+        data,
+        offset: 44,
+        end: table_len,
+    }))
 }
 
 /// Iterator over MADT entries.
@@ -321,11 +312,7 @@ mod tests {
         assert_eq!(hdr.local_apic_address, 0xFEE00000);
 
         match iter.next().unwrap() {
-            MadtEntry::LocalApic {
-                acpi_processor_id,
-                apic_id,
-                flags,
-            } => {
+            MadtEntry::LocalApic { acpi_processor_id, apic_id, flags } => {
                 assert_eq!(acpi_processor_id, 0);
                 assert_eq!(apic_id, 1);
                 assert_eq!(flags, 1);
@@ -349,11 +336,7 @@ mod tests {
         let (_, mut iter) = parse_madt(&table).unwrap();
 
         match iter.next().unwrap() {
-            MadtEntry::IoApic {
-                io_apic_id,
-                io_apic_address,
-                global_system_interrupt_base,
-            } => {
+            MadtEntry::IoApic { io_apic_id, io_apic_address, global_system_interrupt_base } => {
                 assert_eq!(io_apic_id, 2);
                 assert_eq!(io_apic_address, 0xFEC00000);
                 assert_eq!(global_system_interrupt_base, 0);

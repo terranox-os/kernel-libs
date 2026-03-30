@@ -42,14 +42,8 @@ fn read_u32_be(data: &[u8], off: usize) -> u32 {
 
 fn read_u64_be(data: &[u8], off: usize) -> u64 {
     u64::from_be_bytes([
-        data[off],
-        data[off + 1],
-        data[off + 2],
-        data[off + 3],
-        data[off + 4],
-        data[off + 5],
-        data[off + 6],
-        data[off + 7],
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
     ])
 }
 
@@ -121,11 +115,7 @@ impl<'a> FdtProperty<'a> {
 
     /// Read property as a string.
     pub fn as_str(&self) -> Option<&'a str> {
-        let len = self
-            .data
-            .iter()
-            .position(|&b| b == 0)
-            .unwrap_or(self.data.len());
+        let len = self.data.iter().position(|&b| b == 0).unwrap_or(self.data.len());
         core::str::from_utf8(&self.data[..len]).ok()
     }
 }
@@ -215,10 +205,7 @@ pub fn find_node_properties<'a>(
 
                 if in_target {
                     if let Some(name) = fdt_string(data, hdr, nameoff) {
-                        props.push(FdtProperty {
-                            name,
-                            data: prop_data,
-                        });
+                        props.push(FdtProperty { name, data: prop_data });
                     }
                 }
             }
@@ -312,10 +299,7 @@ struct PathParts<'a> {
 
 impl<'a> PathParts<'a> {
     fn from_path(path: &'a str) -> Self {
-        let mut p = Self {
-            parts: [""; 16],
-            len: 0,
-        };
+        let mut p = Self { parts: [""; 16], len: 0 };
         for segment in path.split('/') {
             if !segment.is_empty() && p.len < 16 {
                 p.parts[p.len] = segment;
@@ -393,7 +377,7 @@ mod tests {
         push_u32_be(&mut blob, mem_rsvmap_off);
         push_u32_be(&mut blob, 17); // version
         push_u32_be(&mut blob, 16); // last_comp_version
-        push_u32_be(&mut blob, 0); // boot_cpuid_phys
+        push_u32_be(&mut blob, 0);  // boot_cpuid_phys
         push_u32_be(&mut blob, strings.len() as u32);
         push_u32_be(&mut blob, struct_size);
 

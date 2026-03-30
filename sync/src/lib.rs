@@ -7,9 +7,9 @@
 #![no_std]
 #![forbid(unsafe_op_in_unsafe_fn)]
 
-pub mod atomic_bitops;
-pub mod once;
 pub mod spinlock;
+pub mod once;
+pub mod atomic_bitops;
 
-pub use once::Once;
 pub use spinlock::{SpinLock, SpinLockGuard};
+pub use once::Once;

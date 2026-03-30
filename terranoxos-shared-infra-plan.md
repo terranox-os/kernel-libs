@@ -538,7 +538,7 @@ Foundation crate. `#![no_std]`, no allocator required.
 
 Depends on trx-cap. `#![no_std]`.
 
-- 119 syscall numbers across all 4 ranges (23 shared + 82 TRX + 7 RT + 7 Hermetica) (mirrors genesis_syscall.h)
+- All 91 TerranoxOS syscall numbers (mirrors genesis_syscall.h)
 - POSIX errno constants (mirrors genesis_result.h errno mapping)
 - Type aliases: `pid_t = i64`, `off_t = i64`, `mode_t = u32`, etc.
 - `struct stat` layout matching TerranoxOS kernel

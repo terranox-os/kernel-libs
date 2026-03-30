@@ -349,7 +349,7 @@ cap::root
 | 65 | `trx_input_ungrab` | `cap::input::keyboard` | `handle: i64` | `0 / -errno` | Release exclusive input grab. |
 | 66 | `trx_input_set_keymap` | `cap::input::keyboard` | `handle: i64, keymap: *const u8, len: usize` | `0 / -errno` | Load an XKB keymap for a keyboard device. |
 | 67 | `trx_touch_read_events` | `cap::input::touch` | `handle: i64, events: *mut touch_event_t, max: u32` | `count: i64` | Read multi-touch events (slots, x, y, pressure). |
-| 68 | `trx_input_set_accel` | `cap::input::pointer` | `handle: i64, profile: u32, speed: i32` (fixed-point, value × 1000)` | `0 / -errno` | Set pointer acceleration profile and speed. |
+| 68 | `trx_input_set_accel` | `cap::input::pointer` | `handle: i64, profile: u32, speed: f64` | `0 / -errno` | Set pointer acceleration profile and speed. |
 | 69 | *(reserved)* | | | | Future expansion (stylus, gesture). |
 
 ---

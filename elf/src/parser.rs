@@ -120,14 +120,8 @@ pub(crate) fn read_u32_le(data: &[u8], off: usize) -> u32 {
 
 pub(crate) fn read_u64_le(data: &[u8], off: usize) -> u64 {
     u64::from_le_bytes([
-        data[off],
-        data[off + 1],
-        data[off + 2],
-        data[off + 3],
-        data[off + 4],
-        data[off + 5],
-        data[off + 6],
-        data[off + 7],
+        data[off], data[off + 1], data[off + 2], data[off + 3],
+        data[off + 4], data[off + 5], data[off + 6], data[off + 7],
     ])
 }
 
@@ -241,11 +235,7 @@ pub struct SectionIter<'a> {
 
 impl<'a> SectionIter<'a> {
     pub fn new(data: &'a [u8], hdr: Elf64Header) -> Self {
-        Self {
-            data,
-            hdr,
-            index: 0,
-        }
+        Self { data, hdr, index: 0 }
     }
 }
 
@@ -273,11 +263,7 @@ pub struct SegmentIter<'a> {
 
 impl<'a> SegmentIter<'a> {
     pub fn new(data: &'a [u8], hdr: Elf64Header) -> Self {
-        Self {
-            data,
-            hdr,
-            index: 0,
-        }
+        Self { data, hdr, index: 0 }
     }
 }
 
@@ -303,10 +289,10 @@ mod tests {
         let mut buf = [0u8; 64];
         // Magic
         buf[0..4].copy_from_slice(&ELF_MAGIC);
-        buf[4] = ELFCLASS64; // class
-        buf[5] = ELFDATA2LSB; // data encoding
-        buf[6] = 1; // ELF version
-                    // e_type = ET_EXEC
+        buf[4] = ELFCLASS64;       // class
+        buf[5] = ELFDATA2LSB;      // data encoding
+        buf[6] = 1;                // ELF version
+        // e_type = ET_EXEC
         buf[16] = ET_EXEC as u8;
         buf[17] = (ET_EXEC >> 8) as u8;
         // e_machine = EM_X86_64

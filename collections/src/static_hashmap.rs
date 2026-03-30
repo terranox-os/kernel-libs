@@ -94,7 +94,10 @@ impl<K: Eq + Hashable, V, const N: usize> StaticHashMap<K, V, N> {
             match &self.slots[idx] {
                 Slot::Occupied(k, _) if *k == key => {
                     // Replace existing
-                    let old = core::mem::replace(&mut self.slots[idx], Slot::Occupied(key, value));
+                    let old = core::mem::replace(
+                        &mut self.slots[idx],
+                        Slot::Occupied(key, value),
+                    );
                     if let Slot::Occupied(_, v) = old {
                         return Ok(Some(v));
                     }
@@ -147,10 +150,7 @@ impl<K: Eq + Hashable, V, const N: usize> StaticHashMap<K, V, N> {
         for i in 0..N {
             let idx = (start + i) % N;
             match &self.slots[idx] {
-                Slot::Occupied(k, _) if *k == *key => {
-                    found_idx = Some(idx);
-                    break;
-                }
+                Slot::Occupied(k, _) if *k == *key => { found_idx = Some(idx); break; }
                 Slot::Empty => break,
                 _ => {}
             }

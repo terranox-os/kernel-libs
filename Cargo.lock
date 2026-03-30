@@ -4,67 +4,67 @@ version = 4
 
 [[package]]
 name = "genesis-abi"
-version = "0.2.0"
+version = "0.1.0"
 
 [[package]]
 name = "kernel-alloc"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-arch-intrinsics"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-bitops"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-collections"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-crypto"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-devicetree"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-elf"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-kfmt"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
 
 [[package]]
 name = "kernel-sync"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
