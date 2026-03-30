@@ -62,6 +62,9 @@ jobs:
       - name: Miri - genesis-abi
         run: cargo +nightly miri test -p genesis-abi
 
+      - name: Miri - kernel-bitops
+        run: cargo +nightly miri test -p kernel-bitops
+
       - name: Miri - kernel-sync
         run: cargo +nightly miri test -p kernel-sync
 

@@ -1,6 +1,6 @@
 //! ELF64 relocation parsing (x86-64 and AArch64).
 
-use crate::parser::{ElfError, read_u64_le};
+use crate::parser::{read_u64_le, ElfError};
 
 // x86-64 relocation types
 pub const R_X86_64_NONE: u32 = 0;
@@ -37,6 +37,7 @@ impl Elf64Rela {
 }
 
 /// Parse a single RELA entry at the given offset.
+#[must_use]
 pub fn parse_elf64_rela(data: &[u8], offset: usize) -> Result<Elf64Rela, ElfError> {
     if offset + 24 > data.len() {
         return Err(ElfError::SectionOutOfBounds);
@@ -87,6 +88,7 @@ impl<'a> Iterator for RelaIter<'a> {
 ///
 /// Returns `Ok(())` on success, or `Err(ElfError)` if the relocation
 /// type is unsupported or the target offset is out of bounds.
+#[must_use]
 pub fn apply_x86_64_rela(
     target: &mut [u8],
     rela: &Elf64Rela,
@@ -107,7 +109,9 @@ pub fn apply_x86_64_rela(
             target[off..off + 8].copy_from_slice(&val.to_le_bytes());
         }
         R_X86_64_PC32 => {
-            let val = (s as i64).wrapping_add(a).wrapping_sub((base_addr + rela.offset) as i64) as u32;
+            let val = (s as i64)
+                .wrapping_add(a)
+                .wrapping_sub((base_addr + rela.offset) as i64) as u32;
             if off + 4 > target.len() {
                 return Err(ElfError::SectionOutOfBounds);
             }
@@ -178,7 +182,11 @@ mod tests {
     #[test]
     fn test_apply_r_x86_64_64() {
         let mut target = [0u8; 16];
-        let rela = Elf64Rela { offset: 0, info: ((0u64) << 32) | R_X86_64_64 as u64, addend: 8 };
+        let rela = Elf64Rela {
+            offset: 0,
+            info: ((0u64) << 32) | R_X86_64_64 as u64,
+            addend: 8,
+        };
         apply_x86_64_rela(&mut target, &rela, 0x1000, 0).unwrap();
         let val = u64::from_le_bytes(target[0..8].try_into().unwrap());
         assert_eq!(val, 0x1008);
@@ -187,7 +195,11 @@ mod tests {
     #[test]
     fn test_apply_r_x86_64_relative() {
         let mut target = [0u8; 16];
-        let rela = Elf64Rela { offset: 0, info: R_X86_64_RELATIVE as u64, addend: 0x500 };
+        let rela = Elf64Rela {
+            offset: 0,
+            info: R_X86_64_RELATIVE as u64,
+            addend: 0x500,
+        };
         apply_x86_64_rela(&mut target, &rela, 0, 0x200000).unwrap();
         let val = u64::from_le_bytes(target[0..8].try_into().unwrap());
         assert_eq!(val, 0x200500);
@@ -196,7 +208,11 @@ mod tests {
     #[test]
     fn test_apply_none() {
         let mut target = [0xFFu8; 8];
-        let rela = Elf64Rela { offset: 0, info: R_X86_64_NONE as u64, addend: 0 };
+        let rela = Elf64Rela {
+            offset: 0,
+            info: R_X86_64_NONE as u64,
+            addend: 0,
+        };
         apply_x86_64_rela(&mut target, &rela, 0, 0).unwrap();
         assert_eq!(target, [0xFF; 8]); // Unchanged
     }

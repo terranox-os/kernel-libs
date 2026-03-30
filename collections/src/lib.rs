@@ -9,13 +9,13 @@
 #![no_std]
 #![forbid(unsafe_op_in_unsafe_fn)]
 
-pub mod static_vec;
-pub mod ringbuf;
-pub mod static_hashmap;
 pub mod intrusive_list;
 pub mod rbtree;
+pub mod ringbuf;
+pub mod static_hashmap;
+pub mod static_vec;
 
-pub use static_vec::StaticVec;
+pub use rbtree::{RbInorderIter, RbNode, RbTree};
 pub use ringbuf::RingBuf;
 pub use static_hashmap::StaticHashMap;
-pub use rbtree::{RbTree, RbNode, RbInorderIter};
+pub use static_vec::StaticVec;

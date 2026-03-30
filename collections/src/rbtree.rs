@@ -626,6 +626,97 @@ mod tests {
         }
     }
 
+    /// Verify red-black tree invariants:
+    /// 1. min() and max() are valid (non-null when tree is non-empty)
+    /// 2. Inorder traversal yields keys in sorted (ascending) order
+    /// 3. len() matches the number of nodes visited by the iterator
+    fn verify_rb_properties(tree: &RbTree) {
+        if tree.is_empty() {
+            assert!(tree.min().is_null());
+            assert!(tree.max().is_null());
+            assert_eq!(tree.len(), 0);
+            return;
+        }
+
+        // Property 1: min and max are valid
+        let min_ptr = tree.min();
+        let max_ptr = tree.max();
+        assert!(!min_ptr.is_null(), "min must be non-null for non-empty tree");
+        assert!(!max_ptr.is_null(), "max must be non-null for non-empty tree");
+
+        // Property 2 & 3: inorder traversal is sorted and count matches len
+        let iter = RbInorderIter::new(tree);
+        let mut count = 0usize;
+        let mut prev_key: Option<u64> = None;
+        for node in iter {
+            let key = unsafe { (*node).key };
+            if let Some(prev) = prev_key {
+                assert!(
+                    key >= prev,
+                    "inorder violation: {} followed {}",
+                    key,
+                    prev
+                );
+            }
+            prev_key = Some(key);
+            count += 1;
+        }
+        assert_eq!(
+            count,
+            tree.len(),
+            "iterator count ({}) does not match len ({})",
+            count,
+            tree.len()
+        );
+
+        // Verify min and max are consistent with traversal
+        let min_key = unsafe { (*min_ptr).key };
+        let max_key = unsafe { (*max_ptr).key };
+        // Re-traverse to get first and last
+        let mut iter2 = RbInorderIter::new(tree);
+        let first_key = unsafe { (*iter2.next().unwrap()).key };
+        let mut last_key = first_key;
+        for node in iter2 {
+            last_key = unsafe { (*node).key };
+        }
+        assert_eq!(min_key, first_key, "min() key must equal first inorder key");
+        assert_eq!(max_key, last_key, "max() key must equal last inorder key");
+    }
+
+    #[test]
+    fn rbtree_property_verification() {
+        let mut tree = RbTree::new();
+
+        // 20 keys in a pseudo-random order (not sequential, not sorted)
+        let keys: [u64; 20] = [
+            42, 7, 91, 3, 55, 28, 73, 15, 64, 1, 88, 36, 50, 19, 82, 10, 67, 44, 23, 99,
+        ];
+
+        let mut nodes: [RbNode; 20] = core::array::from_fn(|i| RbNode::new(keys[i]));
+        let base = nodes.as_mut_ptr();
+
+        // Insert all 20 nodes, verify properties after each insert
+        for i in 0..20 {
+            unsafe { tree.insert(node_ptr(base, i)) };
+            verify_rb_properties(&tree);
+            assert_eq!(tree.len(), i + 1);
+        }
+
+        // Remove them one by one, verify after each remove
+        // Remove in a different order than insertion
+        let remove_order: [usize; 20] = [
+            5, 0, 19, 12, 3, 17, 8, 1, 14, 6, 11, 9, 16, 2, 18, 4, 13, 7, 15, 10,
+        ];
+
+        for (step, &idx) in remove_order.iter().enumerate() {
+            unsafe { tree.remove(node_ptr(base, idx)) };
+            verify_rb_properties(&tree);
+            assert_eq!(tree.len(), 20 - step - 1);
+        }
+
+        assert!(tree.is_empty());
+    }
+
     #[test]
     fn test_large_tree() {
         let mut tree = RbTree::new();

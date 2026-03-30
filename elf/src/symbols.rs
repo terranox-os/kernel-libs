@@ -1,6 +1,6 @@
 //! ELF64 symbol table parsing.
 
-use crate::parser::{ElfError, strtab_lookup, read_u16_le, read_u32_le, read_u64_le};
+use crate::parser::{read_u16_le, read_u32_le, read_u64_le, strtab_lookup, ElfError};
 
 // Symbol binding (upper 4 bits of st_info)
 pub const STB_LOCAL: u8 = 0;
@@ -48,6 +48,7 @@ impl Elf64Sym {
 }
 
 /// Parse a single ELF64 symbol at the given byte offset.
+#[must_use]
 pub fn parse_elf64_sym(data: &[u8], offset: usize) -> Result<Elf64Sym, ElfError> {
     if offset + 24 > data.len() {
         return Err(ElfError::SectionOutOfBounds);
@@ -95,6 +96,7 @@ impl<'a> Iterator for SymbolIter<'a> {
 }
 
 /// Find a symbol by name in a symtab + strtab pair.
+#[must_use]
 pub fn find_symbol_by_name<'a>(
     symtab_data: &'a [u8],
     strtab_data: &'a [u8],

@@ -173,7 +173,10 @@ mod tests {
 
     #[test]
     fn test_mixed_format() {
-        assert_eq!(fmt_vec!("v={} addr={:#x}", 10, 0x1000u32), b"v=10 addr=0x1000");
+        assert_eq!(
+            fmt_vec!("v={} addr={:#x}", 10, 0x1000u32),
+            b"v=10 addr=0x1000"
+        );
     }
 
     #[test]

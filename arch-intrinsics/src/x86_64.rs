@@ -5,6 +5,10 @@ use core::arch::asm;
 // ── Control Registers ───────────────────────────────────────
 
 /// Read the CR0 register (machine status word).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_cr0() -> u64 {
     let val: u64;
@@ -14,6 +18,10 @@ pub unsafe fn read_cr0() -> u64 {
 }
 
 /// Write the CR0 register.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn write_cr0(val: u64) {
     // Safety: caller must be in ring 0; invalid values may triple-fault.
@@ -21,6 +29,10 @@ pub unsafe fn write_cr0(val: u64) {
 }
 
 /// Read CR2 (page fault linear address).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_cr2() -> u64 {
     let val: u64;
@@ -29,6 +41,10 @@ pub unsafe fn read_cr2() -> u64 {
 }
 
 /// Read CR3 (page table base register).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_cr3() -> u64 {
     let val: u64;
@@ -37,12 +53,20 @@ pub unsafe fn read_cr3() -> u64 {
 }
 
 /// Write CR3 (switches page tables, flushes TLB).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn write_cr3(val: u64) {
     unsafe { asm!("mov cr3, {}", in(reg) val, options(nomem, nostack, preserves_flags)) };
 }
 
 /// Read CR4 (extended machine control).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_cr4() -> u64 {
     let val: u64;
@@ -51,6 +75,10 @@ pub unsafe fn read_cr4() -> u64 {
 }
 
 /// Write CR4.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn write_cr4(val: u64) {
     unsafe { asm!("mov cr4, {}", in(reg) val, options(nomem, nostack, preserves_flags)) };
@@ -59,6 +87,10 @@ pub unsafe fn write_cr4(val: u64) {
 // ── Model-Specific Registers ────────────────────────────────
 
 /// Read a Model-Specific Register by index.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_msr(msr: u32) -> u64 {
     let lo: u32;
@@ -76,6 +108,10 @@ pub unsafe fn read_msr(msr: u32) -> u64 {
 }
 
 /// Write a Model-Specific Register by index.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn write_msr(msr: u32, val: u64) {
     let lo = val as u32;
@@ -94,6 +130,10 @@ pub unsafe fn write_msr(msr: u32, val: u64) {
 // ── Port I/O ────────────────────────────────────────────────
 
 /// Read a byte from an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn inb(port: u16) -> u8 {
     let val: u8;
@@ -109,6 +149,10 @@ pub unsafe fn inb(port: u16) -> u8 {
 }
 
 /// Write a byte to an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn outb(port: u16, val: u8) {
     unsafe {
@@ -122,6 +166,10 @@ pub unsafe fn outb(port: u16, val: u8) {
 }
 
 /// Read a 16-bit word from an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn inw(port: u16) -> u16 {
     let val: u16;
@@ -137,6 +185,10 @@ pub unsafe fn inw(port: u16) -> u16 {
 }
 
 /// Write a 16-bit word to an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn outw(port: u16, val: u16) {
     unsafe {
@@ -150,6 +202,10 @@ pub unsafe fn outw(port: u16, val: u16) {
 }
 
 /// Read a 32-bit dword from an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn inl(port: u16) -> u32 {
     let val: u32;
@@ -165,6 +221,10 @@ pub unsafe fn inl(port: u16) -> u32 {
 }
 
 /// Write a 32-bit dword to an I/O port.
+///
+/// # Safety
+/// Caller must be executing in ring 0. Reading/writing the wrong port
+/// may cause hardware side effects or hang the system.
 #[inline]
 pub unsafe fn outl(port: u16, val: u32) {
     unsafe {
@@ -180,24 +240,40 @@ pub unsafe fn outl(port: u16, val: u32) {
 // ── Interrupt Control ───────────────────────────────────────
 
 /// Disable interrupts (clear IF in RFLAGS).
+///
+/// # Safety
+/// Caller must be executing in ring 0. Disabling interrupts without
+/// re-enabling them will eventually hang the system.
 #[inline]
 pub unsafe fn cli() {
     unsafe { asm!("cli", options(nomem, nostack)) };
 }
 
 /// Enable interrupts (set IF in RFLAGS).
+///
+/// # Safety
+/// Caller must be executing in ring 0. Disabling interrupts without
+/// re-enabling them will eventually hang the system.
 #[inline]
 pub unsafe fn sti() {
     unsafe { asm!("sti", options(nomem, nostack)) };
 }
 
 /// Halt the CPU until the next interrupt.
+///
+/// # Safety
+/// Halts the CPU until an interrupt/event occurs. Must only be called
+/// when interrupts are enabled or an event is expected.
 #[inline]
 pub unsafe fn hlt() {
     unsafe { asm!("hlt", options(nomem, nostack)) };
 }
 
 /// Read RFLAGS register.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn read_rflags() -> u64 {
     let val: u64;
@@ -213,6 +289,10 @@ pub unsafe fn read_rflags() -> u64 {
 }
 
 /// Check if interrupts are enabled (IF flag in RFLAGS).
+///
+/// # Safety
+/// Caller must be executing in ring 0. Disabling interrupts without
+/// re-enabling them will eventually hang the system.
 #[inline]
 pub unsafe fn interrupts_enabled() -> bool {
     // Safety: reads RFLAGS
@@ -222,6 +302,10 @@ pub unsafe fn interrupts_enabled() -> bool {
 // ── TLB ─────────────────────────────────────────────────────
 
 /// Invalidate a single TLB entry for the given virtual address.
+///
+/// # Safety
+/// Caller must be in kernel mode. Incorrect TLB/cache invalidation
+/// can cause stale mappings or data corruption.
 #[inline]
 pub unsafe fn invlpg(addr: u64) {
     unsafe { asm!("invlpg [{}]", in(reg) addr, options(nostack, preserves_flags)) };
@@ -230,6 +314,10 @@ pub unsafe fn invlpg(addr: u64) {
 // ── Misc ────────────────────────────────────────────────────
 
 /// Read the Time Stamp Counter.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn rdtsc() -> u64 {
     let lo: u32;
@@ -247,6 +335,10 @@ pub unsafe fn rdtsc() -> u64 {
 
 /// Serializing read of the Time Stamp Counter (RDTSCP).
 /// Also returns the auxiliary MSR value (typically processor ID).
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn rdtscp() -> (u64, u32) {
     let lo: u32;
@@ -267,6 +359,10 @@ pub unsafe fn rdtscp() -> (u64, u32) {
 /// CPUID instruction. Returns (eax, ebx, ecx, edx).
 ///
 /// rbx is reserved by LLVM, so we save/restore it manually.
+///
+/// # Safety
+/// Caller must be executing in ring 0 (kernel mode). Invalid values
+/// may cause a triple-fault or undefined CPU behavior.
 #[inline]
 pub unsafe fn cpuid(leaf: u32, subleaf: u32) -> (u32, u32, u32, u32) {
     let eax: u32;

@@ -7,6 +7,9 @@ use core::arch::asm;
 /// Read a CSR by name.
 macro_rules! read_csr {
     ($name:ident, $csr:literal) => {
+        /// # Safety
+        /// Caller must be executing in ring 0 (kernel mode). Invalid values
+        /// may cause a triple-fault or undefined CPU behavior.
         #[inline]
         pub unsafe fn $name() -> u64 {
             let val: u64;
@@ -19,6 +22,9 @@ macro_rules! read_csr {
 /// Write a CSR by name.
 macro_rules! write_csr {
     ($name:ident, $csr:literal) => {
+        /// # Safety
+        /// Caller must be executing in ring 0 (kernel mode). Invalid values
+        /// may cause a triple-fault or undefined CPU behavior.
         #[inline]
         pub unsafe fn $name(val: u64) {
             unsafe { asm!(concat!("csrw ", $csr, ", {}"), in(reg) val, options(nomem, nostack, preserves_flags)) };
@@ -29,6 +35,9 @@ macro_rules! write_csr {
 /// Set bits in a CSR.
 macro_rules! set_csr {
     ($name:ident, $csr:literal) => {
+        /// # Safety
+        /// Caller must be executing in ring 0 (kernel mode). Invalid values
+        /// may cause a triple-fault or undefined CPU behavior.
         #[inline]
         pub unsafe fn $name(bits: u64) {
             unsafe { asm!(concat!("csrs ", $csr, ", {}"), in(reg) bits, options(nomem, nostack, preserves_flags)) };
@@ -39,6 +48,9 @@ macro_rules! set_csr {
 /// Clear bits in a CSR.
 macro_rules! clear_csr {
     ($name:ident, $csr:literal) => {
+        /// # Safety
+        /// Caller must be executing in ring 0 (kernel mode). Invalid values
+        /// may cause a triple-fault or undefined CPU behavior.
         #[inline]
         pub unsafe fn $name(bits: u64) {
             unsafe { asm!(concat!("csrc ", $csr, ", {}"), in(reg) bits, options(nomem, nostack, preserves_flags)) };
@@ -99,12 +111,20 @@ read_csr!(read_cycle, "cycle");
 // ── Fence / Barriers ────────────────────────────────────────
 
 /// Full memory fence (iorw, iorw).
+///
+/// # Safety
+/// Must be called from privileged mode. Barriers affect memory ordering
+/// visible to all cores.
 #[inline]
 pub unsafe fn fence() {
     unsafe { asm!("fence iorw, iorw", options(nostack, preserves_flags)) };
 }
 
 /// Instruction fence.
+///
+/// # Safety
+/// Must be called from privileged mode. Barriers affect memory ordering
+/// visible to all cores.
 #[inline]
 pub unsafe fn fence_i() {
     unsafe { asm!("fence.i", options(nostack, preserves_flags)) };
@@ -113,6 +133,10 @@ pub unsafe fn fence_i() {
 // ── Wait / Power ────────────────────────────────────────────
 
 /// Wait for interrupt.
+///
+/// # Safety
+/// Halts the CPU until an interrupt/event occurs. Must only be called
+/// when interrupts are enabled or an event is expected.
 #[inline]
 pub unsafe fn wfi() {
     unsafe { asm!("wfi", options(nomem, nostack, preserves_flags)) };
@@ -121,12 +145,20 @@ pub unsafe fn wfi() {
 // ── TLB ─────────────────────────────────────────────────────
 
 /// Flush all TLB entries.
+///
+/// # Safety
+/// Caller must be in kernel mode. Incorrect TLB/cache invalidation
+/// can cause stale mappings or data corruption.
 #[inline]
 pub unsafe fn sfence_vma_all() {
     unsafe { asm!("sfence.vma zero, zero", options(nostack, preserves_flags)) };
 }
 
 /// Flush TLB entries for a specific virtual address.
+///
+/// # Safety
+/// Caller must be in kernel mode. Incorrect TLB/cache invalidation
+/// can cause stale mappings or data corruption.
 #[inline]
 pub unsafe fn sfence_vma(vaddr: u64) {
     unsafe { asm!("sfence.vma {}, zero", in(reg) vaddr, options(nostack, preserves_flags)) };
