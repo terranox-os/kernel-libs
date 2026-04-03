@@ -125,6 +125,8 @@ pub mod posix_errno {
     pub const EPERM: i32 = 1;
     pub const ENOENT: i32 = 2;
     pub const ESRCH: i32 = 3;
+    pub const EINTR: i32 = 4;
+    pub const EIO: i32 = 5;
     pub const EBADF: i32 = 9;
     pub const EAGAIN: i32 = 11;
     pub const ENOMEM: i32 = 12;
@@ -151,12 +153,12 @@ impl GenResult {
             -6 => posix_errno::ENOSYS,    // NOT_SUPPORTED
             -7 => posix_errno::EBUSY,     // BUSY
             -8 => posix_errno::ETIMEDOUT, // TIMEOUT
-            -9 => posix_errno::EAGAIN,    // INTERRUPTED
+            -9 => posix_errno::EINTR,     // INTERRUPTED
             -10 => posix_errno::EINVAL,   // OVERFLOW
             -16 => posix_errno::EPERM,    // PERMISSION_DENIED
             -17 => posix_errno::EACCES,   // ACCESS_VIOLATION
             -18 => posix_errno::EPERM,    // INVALID_CAPABILITY
-            -32 => posix_errno::EPIPE,    // IO
+            -32 => posix_errno::EIO,      // IO
             -34 => posix_errno::EFAULT,   // BAD_ADDRESS
             -33 => posix_errno::ENOENT,    // DEVICE_OFFLINE
             -35 => posix_errno::EPIPE,    // CHANNEL_CLOSED
@@ -174,7 +176,7 @@ impl GenResult {
             -82 => posix_errno::ENOMEM,   // STACK_OVERFLOW
             -96 => posix_errno::ENOSYS,   // BAD_SYSCALL
             -97 => posix_errno::EBADF,    // BAD_HANDLE
-            -98 => posix_errno::EAGAIN,   // SYSCALL_INTERRUPTED
+            -98 => posix_errno::EINTR,    // SYSCALL_INTERRUPTED
             -99 => posix_errno::ENOMEM,   // HANDLE_LIMIT
             _ => posix_errno::EINVAL,
         }
@@ -188,6 +190,8 @@ impl GenResult {
             2 => Self::ERR_NOT_FOUND,         // ENOENT
             3 => Self::ERR_NOT_FOUND,         // ESRCH
             9 => Self::ERR_BAD_HANDLE,        // EBADF
+            4 => Self::ERR_INTERRUPTED,       // EINTR
+            5 => Self::ERR_IO,                // EIO
             11 => Self::ERR_INTERRUPTED,      // EAGAIN
             12 => Self::ERR_OUT_OF_MEMORY,    // ENOMEM
             13 => Self::ERR_ACCESS_VIOLATION, // EACCES
@@ -367,7 +371,7 @@ pub mod syscall {
     pub const SYS_CAP_CHECK: GenSyscallNr = SYS_TRX_PROCESS_CAP_QUERY;
     pub const SYS_SIGIL_SIGN: GenSyscallNr = SYS_TRX_SIGIL_SIGN;
     pub const SYS_SIGIL_VERIFY: GenSyscallNr = SYS_TRX_SIGIL_VERIFY;
-    pub const SYS_AUDIT_LOG: GenSyscallNr = SYS_TRX_AUDIT_WRITE; // semantic fix: LOG is a write op
+    pub const SYS_AUDIT_LOG: GenSyscallNr = SYS_TRX_AUDIT_WRITE; // LOG is a write operation
     pub const SYS_SANDBOX_CREATE: GenSyscallNr = SYS_TRX_SANDBOX_CREATE;
     pub const SYS_SANDBOX_ENTER: GenSyscallNr = SYS_TRX_SANDBOX_ENTER;
 

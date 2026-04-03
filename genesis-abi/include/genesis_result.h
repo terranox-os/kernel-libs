@@ -50,18 +50,13 @@ typedef int32_t GenResult;
 #define GEN_ERR_INVALID_CAPABILITY ((GenResult)-18)
 
 /* ── I/O and hardware errors (-32 to -47) ────────────────── */
-/*
- * Sub-ranges within the I/O gap:
- *   -32..-34  Core I/O     (IO, DEVICE_OFFLINE, BAD_ADDRESS)
- *   -35..-37  Extended I/O (CHANNEL_CLOSED, DISPLAY_OFFLINE, GPU_ERROR)
- *             Reserved on PR #13 / feature/trx-syscall-reconciliation.
- *   -38..-47  Reserved for future I/O errors
- */
 
 #define GEN_ERR_IO             ((GenResult)-32)
 #define GEN_ERR_DEVICE_OFFLINE ((GenResult)-33)
 #define GEN_ERR_BAD_ADDRESS    ((GenResult)-34)
-/* -35..-37 defined in PR #13: CHANNEL_CLOSED, DISPLAY_OFFLINE, GPU_ERROR */
+#define GEN_ERR_CHANNEL_CLOSED ((GenResult)-35)
+#define GEN_ERR_DISPLAY_OFFLINE ((GenResult)-36)
+#define GEN_ERR_GPU_ERROR      ((GenResult)-37)
 /* -38..-47 reserved */
 
 /* ── Format / parse errors (-48 to -63) ──────────────────── */
@@ -85,24 +80,12 @@ typedef int32_t GenResult;
 /* -83 to -95 reserved for future RT errors */
 
 /* ── Syscall errors (-96 to -111) — TerranoxOS, HermeticaOS ── */
-/*
- * Sub-ranges within the syscall gap:
- *   -96..-98  Core syscall (BAD_SYSCALL, BAD_HANDLE, SYSCALL_INTERRUPTED)
- *   -99       Extended     (HANDLE_LIMIT — added in v0.2.0)
- *   -100..-111 Reserved for future syscall errors
- */
 
 #define GEN_ERR_BAD_SYSCALL          ((GenResult)-96)
 #define GEN_ERR_BAD_HANDLE           ((GenResult)-97)
 #define GEN_ERR_SYSCALL_INTERRUPTED  ((GenResult)-98)
 #define GEN_ERR_HANDLE_LIMIT         ((GenResult)-99)
 /* -100..-111 reserved */
-
-/* ── TerranoxOS I/O extension errors (-35 to -47) ───────── */
-
-#define GEN_ERR_CHANNEL_CLOSED   ((GenResult)-35)
-#define GEN_ERR_DISPLAY_OFFLINE  ((GenResult)-36)
-#define GEN_ERR_GPU_ERROR        ((GenResult)-37)
 
 /* ── Convenience helpers ─────────────────────────────────── */
 
@@ -160,6 +143,8 @@ static inline const char *gen_result_name(GenResult r)
 #define GEN_POSIX_EPERM      1
 #define GEN_POSIX_ENOENT     2
 #define GEN_POSIX_ESRCH      3
+#define GEN_POSIX_EINTR      4
+#define GEN_POSIX_EIO        5
 #define GEN_POSIX_EBADF      9
 #define GEN_POSIX_EAGAIN    11
 #define GEN_POSIX_ENOMEM    12
@@ -189,17 +174,17 @@ static inline int gen_result_to_errno(GenResult r)
     case GEN_ERR_NOT_SUPPORTED:       return GEN_POSIX_ENOSYS;
     case GEN_ERR_BUSY:                return GEN_POSIX_EBUSY;
     case GEN_ERR_TIMEOUT:             return GEN_POSIX_ETIMEDOUT;
-    case GEN_ERR_INTERRUPTED:         return GEN_POSIX_EAGAIN;
+    case GEN_ERR_INTERRUPTED:         return GEN_POSIX_EINTR;
     case GEN_ERR_OVERFLOW:            return GEN_POSIX_EINVAL;
     case GEN_ERR_PERMISSION_DENIED:   return GEN_POSIX_EPERM;
     case GEN_ERR_ACCESS_VIOLATION:    return GEN_POSIX_EACCES;
     case GEN_ERR_INVALID_CAPABILITY:  return GEN_POSIX_EPERM;
-    case GEN_ERR_IO:                  return GEN_POSIX_EPIPE;
+    case GEN_ERR_IO:                  return GEN_POSIX_EIO;
     case GEN_ERR_BAD_ADDRESS:         return GEN_POSIX_EFAULT;
     case GEN_ERR_BAD_SYSCALL:         return GEN_POSIX_ENOSYS;
     case GEN_ERR_BAD_HANDLE:          return GEN_POSIX_EBADF;
-    case GEN_ERR_SYSCALL_INTERRUPTED: return GEN_POSIX_EAGAIN;
-    case GEN_ERR_DEVICE_OFFLINE:       return GEN_POSIX_ENOENT;
+    case GEN_ERR_SYSCALL_INTERRUPTED: return GEN_POSIX_EINTR;
+    case GEN_ERR_DEVICE_OFFLINE:      return GEN_POSIX_ENOENT;
     case GEN_ERR_CHANNEL_CLOSED:      return GEN_POSIX_EPIPE;
     case GEN_ERR_DISPLAY_OFFLINE:     return GEN_POSIX_ENOENT;
     case GEN_ERR_GPU_ERROR:           return GEN_POSIX_EPIPE;
