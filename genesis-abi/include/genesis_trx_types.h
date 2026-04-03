@@ -68,6 +68,14 @@ typedef struct GenTrxDisplayInfo {
 } GenTrxDisplayInfo;
 
 /* ── Input event (libinput-compatible layout) ───────────── */
+/*
+ * ABI SYNC WARNING: This struct must match TrxInputEvent in
+ * terranox-os/kernel/include/terranox/evdev.h (24 bytes).
+ * Both are Linux struct input_event compatible.
+ * Any change here requires updating the kernel copy and adding
+ * a _Static_assert(sizeof(GenTrxInputEvent) == sizeof(TrxInputEvent))
+ * in the kernel's compile_test. See issue #16.
+ */
 
 typedef struct GenTrxInputEvent {
     uint64_t timestamp_ns;

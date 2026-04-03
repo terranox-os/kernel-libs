@@ -174,6 +174,7 @@ typedef uint32_t GenSyscallNr;
 #define GEN_SYS_TRX_MODULE_UNLOAD   ((GenSyscallNr)0x01A2)
 #define GEN_SYS_TRX_AUDIT_READ      ((GenSyscallNr)0x01A3)
 #define GEN_SYS_TRX_AUDIT_SET_POLICY ((GenSyscallNr)0x01A4)
+#define GEN_SYS_TRX_AUDIT_WRITE     ((GenSyscallNr)0x01A5)
 
 /* Subsystem 11: Sigil / sandbox — legacy (0x01B0–0x01BF) */
 #define GEN_SYS_TRX_SIGIL_SIGN      ((GenSyscallNr)0x01B0)
@@ -187,7 +188,7 @@ typedef uint32_t GenSyscallNr;
 #define GEN_SYS_CAP_CHECK      GEN_SYS_TRX_PROCESS_CAP_QUERY
 #define GEN_SYS_SIGIL_SIGN     GEN_SYS_TRX_SIGIL_SIGN
 #define GEN_SYS_SIGIL_VERIFY   GEN_SYS_TRX_SIGIL_VERIFY
-#define GEN_SYS_AUDIT_LOG      GEN_SYS_TRX_AUDIT_READ
+#define GEN_SYS_AUDIT_LOG      GEN_SYS_TRX_AUDIT_WRITE  /* was AUDIT_READ — semantic fix: LOG is a write op */
 #define GEN_SYS_SANDBOX_CREATE GEN_SYS_TRX_SANDBOX_CREATE
 #define GEN_SYS_SANDBOX_ENTER  GEN_SYS_TRX_SANDBOX_ENTER
 
