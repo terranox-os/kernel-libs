@@ -353,6 +353,7 @@ pub mod syscall {
     pub const SYS_TRX_MODULE_UNLOAD: GenSyscallNr = GenSyscallNr(0x01A2);
     pub const SYS_TRX_AUDIT_READ: GenSyscallNr = GenSyscallNr(0x01A3);
     pub const SYS_TRX_AUDIT_SET_POLICY: GenSyscallNr = GenSyscallNr(0x01A4);
+    pub const SYS_TRX_AUDIT_WRITE: GenSyscallNr = GenSyscallNr(0x01A5);
 
     // Subsystem 11: Sigil / sandbox — legacy (0x01B0–0x01BF)
     pub const SYS_TRX_SIGIL_SIGN: GenSyscallNr = GenSyscallNr(0x01B0);
@@ -366,7 +367,7 @@ pub mod syscall {
     pub const SYS_CAP_CHECK: GenSyscallNr = SYS_TRX_PROCESS_CAP_QUERY;
     pub const SYS_SIGIL_SIGN: GenSyscallNr = SYS_TRX_SIGIL_SIGN;
     pub const SYS_SIGIL_VERIFY: GenSyscallNr = SYS_TRX_SIGIL_VERIFY;
-    pub const SYS_AUDIT_LOG: GenSyscallNr = SYS_TRX_AUDIT_READ;
+    pub const SYS_AUDIT_LOG: GenSyscallNr = SYS_TRX_AUDIT_WRITE; // semantic fix: LOG is a write op
     pub const SYS_SANDBOX_CREATE: GenSyscallNr = SYS_TRX_SANDBOX_CREATE;
     pub const SYS_SANDBOX_ENTER: GenSyscallNr = SYS_TRX_SANDBOX_ENTER;
 
@@ -1123,6 +1124,7 @@ mod tests {
             syscall::SYS_TRX_MODULE_UNLOAD,
             syscall::SYS_TRX_AUDIT_READ,
             syscall::SYS_TRX_AUDIT_SET_POLICY,
+            syscall::SYS_TRX_AUDIT_WRITE,
             // Sigil/sandbox
             syscall::SYS_TRX_SIGIL_SIGN,
             syscall::SYS_TRX_SIGIL_VERIFY,
@@ -1140,7 +1142,7 @@ mod tests {
 
     #[test]
     fn trx_syscall_no_duplicates() {
-        let trx_nrs: [u32; 82] = [
+        let trx_nrs: [u32; 83] = [
             0x0100, 0x0103, 0x0104, 0x0105, 0x0106, 0x0107, 0x0110, 0x0111, 0x0112, 0x0114, 0x0115,
             0x0116, 0x0117, 0x0118, 0x0122, 0x0123, 0x0124, 0x0125, 0x0126, 0x0127, 0x0128, 0x0129,
             0x0130, 0x0131, 0x0132, 0x0133, 0x0134, 0x0135, 0x0136, 0x0137, 0x0138, 0x0139, 0x0147,
@@ -1148,7 +1150,7 @@ mod tests {
             0x0159, 0x0160, 0x0161, 0x0162, 0x0163, 0x0164, 0x0165, 0x0166, 0x0167, 0x0168, 0x0170,
             0x0171, 0x0172, 0x0173, 0x0174, 0x0175, 0x0176, 0x0177, 0x0178, 0x0179, 0x0180, 0x0181,
             0x0182, 0x0183, 0x0184, 0x0185, 0x0186, 0x0192, 0x0193, 0x01A0, 0x01A1, 0x01A2, 0x01A3,
-            0x01A4, 0x01B0, 0x01B1, 0x01B2, 0x01B3,
+            0x01A4, 0x01A5, 0x01B0, 0x01B1, 0x01B2, 0x01B3,
         ];
         for (i, &a) in trx_nrs.iter().enumerate() {
             for &b in &trx_nrs[i + 1..] {
@@ -1182,7 +1184,7 @@ mod tests {
         assert_eq!(syscall::SYS_CAP_CHECK, syscall::SYS_TRX_PROCESS_CAP_QUERY);
         assert_eq!(syscall::SYS_SIGIL_SIGN, syscall::SYS_TRX_SIGIL_SIGN);
         assert_eq!(syscall::SYS_SIGIL_VERIFY, syscall::SYS_TRX_SIGIL_VERIFY);
-        assert_eq!(syscall::SYS_AUDIT_LOG, syscall::SYS_TRX_AUDIT_READ);
+        assert_eq!(syscall::SYS_AUDIT_LOG, syscall::SYS_TRX_AUDIT_WRITE);
         assert_eq!(syscall::SYS_SANDBOX_CREATE, syscall::SYS_TRX_SANDBOX_CREATE);
         assert_eq!(syscall::SYS_SANDBOX_ENTER, syscall::SYS_TRX_SANDBOX_ENTER);
     }

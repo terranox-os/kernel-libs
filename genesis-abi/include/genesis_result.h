@@ -50,10 +50,19 @@ typedef int32_t GenResult;
 #define GEN_ERR_INVALID_CAPABILITY ((GenResult)-18)
 
 /* ── I/O and hardware errors (-32 to -47) ────────────────── */
+/*
+ * Sub-ranges within the I/O gap:
+ *   -32..-34  Core I/O     (IO, DEVICE_OFFLINE, BAD_ADDRESS)
+ *   -35..-37  Extended I/O (CHANNEL_CLOSED, DISPLAY_OFFLINE, GPU_ERROR)
+ *             Reserved on PR #13 / feature/trx-syscall-reconciliation.
+ *   -38..-47  Reserved for future I/O errors
+ */
 
 #define GEN_ERR_IO             ((GenResult)-32)
 #define GEN_ERR_DEVICE_OFFLINE ((GenResult)-33)
 #define GEN_ERR_BAD_ADDRESS    ((GenResult)-34)
+/* -35..-37 defined in PR #13: CHANNEL_CLOSED, DISPLAY_OFFLINE, GPU_ERROR */
+/* -38..-47 reserved */
 
 /* ── Format / parse errors (-48 to -63) ──────────────────── */
 
@@ -75,13 +84,19 @@ typedef int32_t GenResult;
 #define GEN_ERR_STACK_OVERFLOW ((GenResult)-82)
 /* -83 to -95 reserved for future RT errors */
 
-/* ── Syscall errors (-96 to -111) — TerranoxOS, HermeticaOS  */
+/* ── Syscall errors (-96 to -111) — TerranoxOS, HermeticaOS ── */
+/*
+ * Sub-ranges within the syscall gap:
+ *   -96..-98  Core syscall (BAD_SYSCALL, BAD_HANDLE, SYSCALL_INTERRUPTED)
+ *   -99       Extended     (HANDLE_LIMIT — added in v0.2.0)
+ *   -100..-111 Reserved for future syscall errors
+ */
 
 #define GEN_ERR_BAD_SYSCALL          ((GenResult)-96)
 #define GEN_ERR_BAD_HANDLE           ((GenResult)-97)
 #define GEN_ERR_SYSCALL_INTERRUPTED  ((GenResult)-98)
 #define GEN_ERR_HANDLE_LIMIT         ((GenResult)-99)
-/* -100 to -111 reserved for future syscall errors */
+/* -100..-111 reserved */
 
 /* ── TerranoxOS I/O extension errors (-35 to -47) ───────── */
 
