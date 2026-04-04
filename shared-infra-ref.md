@@ -1,10 +1,14 @@
 # TerranoxOS Ecosystem — Shared Infrastructure Architecture Reference
 
-> **Status: Partially superseded.** This document was the original architecture specification. Several sections are now stale. For the current authoritative plans, see:
+> **Status: SUPERSEDED.** This was the original v1.0 architecture specification. Multiple sections are stale (CapSet u32 → TrxCapSet 128-bit, sequential syscall numbers → hex subsystem blocks, gcc → clang, Makefile → Bazel). **Do not use for implementation decisions.**
+>
+> Current authoritative documents:
 > - `terranoxos-shared-infra-plan.md` — repo structure and shared crate design
-> - `terranoxos-libc-plan.md` — Zig POSIX libc
-> - `terranoxos-zig-libc-reference.md` — Zig technical reference
-> - `genesis-abi/include/` — canonical ABI types (source of truth)
+> - `terranoxos-libc-plan.md` — Zig POSIX libc design
+> - `terranoxos-syscall-ref.md` — 119-syscall ABI reference
+> - `genesis-abi/include/` — canonical ABI types (C headers = source of truth)
+>
+> Kept for historical context only.
 
 Version 2.0 — March 2026
 

@@ -1,12 +1,14 @@
 # Reconciliation plan: TerranoxOS syscall reference vs. kernel-libs
 
+> **Status: COMPLETED.** Implemented in PR #13 (merged 2026-03-29). See CHANGELOG.md v0.2.0.
+
 *March 2026 — Generated from gap analysis of `terranoxos-syscall-ref.md` against `genesis-abi`*
 
 ---
 
 ## Context
 
-The new `terranoxos-syscall-ref.md` document defines 91 TerranoxOS syscalls across 11 subsystems, a hierarchical capability model, POSIX errno mappings, and 10 new data structures. The existing `genesis-abi` crate has 45 syscalls (23 shared + 8 TerranoxOS + 7 RT + 7 Hermetica), a flat 16-bit capability bitmask, and no errno translation.
+The new `terranoxos-syscall-ref.md` document defines 82 TerranoxOS-specific syscalls across 12 subsystem blocks (plus 4 legacy sigil/sandbox), a hierarchical capability model, POSIX errno mappings, and 10 new data structures. The existing `genesis-abi` crate has 45 syscalls (23 shared + 8 TerranoxOS + 7 RT + 7 Hermetica), a flat 16-bit capability bitmask, and no errno translation. Final total after reconciliation: 119 syscalls (23 shared + 82 TRX + 7 RT + 7 Hermetica).
 
 This plan implements the full reconciliation in kernel-libs as a working prototype, ahead of the planned shared infrastructure repo split (`trx-abi`, `trx-cap`, `trx-idl`, etc.).
 
@@ -14,7 +16,7 @@ This plan implements the full reconciliation in kernel-libs as a working prototy
 
 | Decision | Choice |
 |----------|--------|
-| Syscall numbering | Rebase document's 91 syscalls into the existing 0x0100 TerranoxOS range |
+| Syscall numbering | Rebase document's 82 TRX-specific syscalls into the existing 0x0100 TerranoxOS range |
 | Capability model | Hierarchical DAG (128-bit domain-partitioned bitmask) |
 | Missing syscalls (SIGIL_SIGN, SIGIL_VERIFY, SANDBOX_*) | Keep in repo, reconcile later |
 | Error mapping | Add `gen_result_to_errno()` / `gen_result_from_errno()` translation functions |
@@ -426,7 +428,7 @@ Syscalls that overlap with the shared range (exit, read, write, open, close, sta
 | 0x01B2 | `GEN_SYS_TRX_SANDBOX_CREATE` | Existing, renumbered from 0x0106 |
 | 0x01B3 | `GEN_SYS_TRX_SANDBOX_ENTER` | Existing, renumbered from 0x0107 |
 
-### Total TerranoxOS syscall count: ~91 (new) + 4 (legacy sigil/sandbox) = ~95
+### Total TerranoxOS syscall count: 82 (TRX-specific) + 4 (legacy sigil/sandbox) = 86 in 0x0100 range
 
 ### Files touched
 
