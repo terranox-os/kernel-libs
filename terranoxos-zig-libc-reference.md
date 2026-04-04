@@ -75,7 +75,7 @@ pub const SyscallNr = enum(u32) {
     STAT          = c.GEN_SYS_STAT,
     FSTAT         = c.GEN_SYS_FSTAT,
     LSEEK         = c.GEN_SYS_LSEEK,
-    // ... all 91 syscalls from genesis_syscall.h
+    // ... all 119 syscalls from genesis_syscall.h (82 TRX + 23 shared + 7 RT + 7 Hermetica)
 };
 ```
 

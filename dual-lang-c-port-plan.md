@@ -1,5 +1,7 @@
 # Plan: Port Rust-only crates to dual-language (C + Rust)
 
+> **Status: COMPLETED.** Implemented in PR #26 (merged 2026-03-29). See CHANGELOG.md v0.2.0.
+
 *March 2026 — Generated from language split analysis*
 
 ---

@@ -62,7 +62,7 @@ Userspace (Rust programs, C programs)
                          ▼
 ┌──────────────────────────────────────────────────────────┐
 │                  TerranoxOS Kernel                        │
-│  91 syscalls, 11 subsystems, capability-gated            │
+│  119 syscalls (82 TRX + 23 shared + 7 RT + 7 Hermetica)  │
 │  Links against: kernel-libs C side                       │
 │  (gen_sync, gen_crypto, gen_collections, gen_alloc, ...) │
 └──────────────────────────────────────────────────────────┘
@@ -200,7 +200,7 @@ No manual constant duplication. If the kernel adds or renumbers syscalls (like t
                                        │
                         ┌──────────────▼──────────────────┐
                         │     TerranoxOS kernel           │
-                        │  91 syscalls, capability-gated  │
+                        │  119 syscalls, capability-gated │
                         │  Links: kernel-libs (C side)    │
                         └──────────────┬──────────────────┘
                                        │

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-kernel-libs is a shared library repository of freestanding, zero-dependency crates (Rust) and static libraries (C) consumed by three OS kernels: **TerranoxOS** (security-focused desktop), **GenesisOS-RT** (robotics RTOS), and **HermeticaOS** (experimental hot-swap modules). The planning documents (`shared_kernel_libs_v11.docx`, `kernel_libs_impl_plan_v11.docx`) are the authoritative specification.
+kernel-libs is a shared library repository of freestanding, zero-dependency crates (Rust) and static libraries (C) consumed by three OS kernels: **TerranoxOS** (security-focused desktop), **GenesisOS-RT** (robotics RTOS), and **HermeticaOS** (experimental hot-swap modules). Authoritative specifications: `terranoxos-syscall-ref.md` (syscall ABI), `terranoxos-shared-infra-plan.md` (repo structure), `terranoxos-libc-plan.md` (Zig POSIX libc).
 
 ## Build & Test Commands
 
