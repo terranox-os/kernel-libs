@@ -747,6 +747,22 @@ pub struct GenTrxAuditEntry {
     pub result: u32,
 }
 
+/// Compositor layer for `trx_compositor_present`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct GenTrxLayer {
+    pub surface_handle: i64,
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub z_order: i32,
+    pub flags: u32,
+}
+
+pub const GEN_TRX_LAYER_OPAQUE: u32 = 1 << 0;
+pub const GEN_TRX_LAYER_CURSOR: u32 = 1 << 1;
+
 pub const MODULE_NAME_MAX: usize = 64;
 pub const MODULE_MAGIC: u32 = 0x47454E4D;
 pub const MODULE_SECTION: &str = ".gen_module";
@@ -1645,6 +1661,11 @@ mod tests {
     #[test]
     fn trx_audit_entry_size() {
         assert_eq!(mem::size_of::<GenTrxAuditEntry>(), 48);
+    }
+
+    #[test]
+    fn trx_layer_size() {
+        assert_eq!(mem::size_of::<GenTrxLayer>(), 32);
     }
 
     #[test]

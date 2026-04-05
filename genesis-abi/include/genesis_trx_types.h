@@ -134,6 +134,26 @@ typedef struct GenTrxAuditEntry {
     uint32_t        result;  /* GRANTED=0, DENIED=1 */
 } GenTrxAuditEntry;
 
+/* ── Compositor layer (for trx_compositor_present) ──────── */
+
+/*
+ * GenTrxLayer: Describes one composited surface layer.
+ * Passed as an array to trx_compositor_present() which composites
+ * layers back-to-front by z_order.
+ */
+typedef struct GenTrxLayer {
+    int64_t  surface_handle;   /* from trx_surface_create */
+    int32_t  x;                /* screen-space position */
+    int32_t  y;
+    uint32_t width;            /* source rectangle dimensions */
+    uint32_t height;
+    int32_t  z_order;          /* back-to-front ordering (higher = on top) */
+    uint32_t flags;            /* LAYER_OPAQUE=1, LAYER_CURSOR=2 */
+} GenTrxLayer;
+
+#define GEN_TRX_LAYER_OPAQUE  (1U << 0)
+#define GEN_TRX_LAYER_CURSOR  (1U << 1)
+
 #ifdef __cplusplus
 }
 #endif

@@ -80,6 +80,11 @@ _Static_assert(offsetof(GenTrxDisplayInfo, _pad0) == 52, "DisplayInfo._pad0 offs
 _Static_assert(offsetof(GenTrxGpuInfo, driver_name) == 24, "GpuInfo.driver_name offset");
 
 _Static_assert(offsetof(GenTrxProcessInfo, state) == 8, "ProcessInfo.state offset");
+
+_Static_assert(sizeof(GenTrxLayer) == 32, "GenTrxLayer must be 32 bytes");
+_Static_assert(offsetof(GenTrxLayer, surface_handle) == 0, "Layer.surface_handle offset");
+_Static_assert(offsetof(GenTrxLayer, z_order) == 24, "Layer.z_order offset");
+_Static_assert(offsetof(GenTrxLayer, flags) == 28, "Layer.flags offset");
 _Static_assert(offsetof(GenTrxProcessInfo, memory_bytes) == 16, "ProcessInfo.memory_bytes offset");
 _Static_assert(offsetof(GenTrxProcessInfo, cap_count) == 32, "ProcessInfo.cap_count offset");
 
