@@ -21,6 +21,33 @@ pub const NodeTag = enum {
     text,
 };
 
+/// Scroll state for scrollable containers.
+pub const ScrollState = struct {
+    offset_x: f32 = 0,
+    offset_y: f32 = 0,
+    content_width: f32 = 0,
+    content_height: f32 = 0,
+
+    pub fn scrollBy(self: *ScrollState, dx: f32, dy: f32, viewport_w: f32, viewport_h: f32) void {
+        self.offset_x += dx;
+        self.offset_y += dy;
+        self.clamp(viewport_w, viewport_h);
+    }
+
+    pub fn clamp(self: *ScrollState, viewport_w: f32, viewport_h: f32) void {
+        const max_x = @max(self.content_width - viewport_w, 0);
+        const max_y = @max(self.content_height - viewport_h, 0);
+        self.offset_x = @max(0, @min(self.offset_x, max_x));
+        self.offset_y = @max(0, @min(self.offset_y, max_y));
+    }
+
+    pub fn scrollRatioY(self: *const ScrollState, viewport_h: f32) f32 {
+        const max_y = self.content_height - viewport_h;
+        if (max_y <= 0) return 0;
+        return self.offset_y / max_y;
+    }
+};
+
 /// A single node in the UI tree.
 ///
 /// Nodes are lightweight value types built each frame by the
@@ -35,6 +62,8 @@ pub const Node = struct {
     on_key: ?*const fn (u32) void = null,
     /// Filled in by layout pass.
     layout: LayoutResult = .{},
+    /// Scroll state for overflow:scroll containers.
+    scroll: ScrollState = .{},
 };
 
 /// Options accepted by `box()`.

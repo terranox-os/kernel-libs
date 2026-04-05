@@ -86,6 +86,43 @@ fn hitTestRecursive(node: *const Node, px: f32, py: f32) ?*const Node {
     return node;
 }
 
+/// Dispatch a scroll event to the deepest scrollable container at (px, py).
+/// `delta_y` is in pixels (positive = scroll down).
+/// Returns true if a scrollable container was found and scrolled.
+pub fn dispatchScroll(root: *Node, px: f32, py: f32, delta_y: f32) bool {
+    return dispatchScrollRecursive(root, px, py, delta_y);
+}
+
+fn dispatchScrollRecursive(node: *Node, px: f32, py: f32, delta_y: f32) bool {
+    const l = node.layout;
+    if (px < l.x or py < l.y or
+        px >= l.x + l.width or py >= l.y + l.height)
+    {
+        return false;
+    }
+
+    // Check children first (depth-first, reverse order)
+    if (node.children.len > 0) {
+        var i = node.children.len;
+        while (i > 0) {
+            i -= 1;
+            const child: *Node = @constCast(node.children[i]);
+            if (dispatchScrollRecursive(child, px, py, delta_y)) {
+                return true;
+            }
+        }
+    }
+
+    // This node is scrollable if overflow == .scroll
+    const style_mod = @import("style.zig");
+    if (node.style.overflow == style_mod.Overflow.scroll) {
+        node.scroll.scrollBy(0, delta_y, l.width, l.height);
+        return true;
+    }
+
+    return false;
+}
+
 /// Dispatch a click event to the node at (px, py) in the tree.
 /// Returns true if a handler was invoked.
 pub fn dispatchClick(root: *const Node, px: f32, py: f32) bool {

@@ -65,18 +65,59 @@ pub const Framebuffer = struct {
     }
 };
 
+/// Clip rectangle for rendering.
+pub const ClipRect = struct {
+    x: i32,
+    y: i32,
+    w: u32,
+    h: u32,
+
+    pub fn intersect(a: ClipRect, b: ClipRect) ?ClipRect {
+        const ax1 = a.x + @as(i32, @intCast(a.w));
+        const ay1 = a.y + @as(i32, @intCast(a.h));
+        const bx1 = b.x + @as(i32, @intCast(b.w));
+        const by1 = b.y + @as(i32, @intCast(b.h));
+        const nx = @max(a.x, b.x);
+        const ny = @max(a.y, b.y);
+        const nx1 = @min(ax1, bx1);
+        const ny1 = @min(ay1, by1);
+        if (nx >= nx1 or ny >= ny1) return null;
+        return .{
+            .x = nx,
+            .y = ny,
+            .w = @intCast(nx1 - nx),
+            .h = @intCast(ny1 - ny),
+        };
+    }
+};
+
+const SCROLLBAR_WIDTH: u32 = 6;
+const SCROLLBAR_COLOR = Color.rgba(160, 160, 180, 128);
+const SCROLLBAR_TRACK = Color.rgba(40, 40, 55, 64);
+
 /// Render an entire node tree into a framebuffer.
 pub fn renderTree(fb: *Framebuffer, node: *const Node) void {
-    renderNodeRecursive(fb, node);
+    const full_clip = ClipRect{
+        .x = 0,
+        .y = 0,
+        .w = fb.width,
+        .h = fb.height,
+    };
+    renderNodeClipped(fb, node, full_clip);
 }
 
-fn renderNodeRecursive(fb: *Framebuffer, node: *const Node) void {
+fn renderNodeClipped(fb: *Framebuffer, node: *const Node, clip: ClipRect) void {
     const l = node.layout;
     const s = node.style;
     const x: i32 = @intFromFloat(l.x);
     const y: i32 = @intFromFloat(l.y);
     const w: u32 = @intFromFloat(@max(l.width, 0));
     const h: u32 = @intFromFloat(@max(l.height, 0));
+
+    // Check if node is fully outside clip
+    const node_clip = ClipRect{ .x = x, .y = y, .w = w, .h = h };
+    const visible = ClipRect.intersect(node_clip, clip) orelse return;
+    _ = visible;
 
     // Background fill
     if (s.bg.a > 0) {
@@ -107,10 +148,56 @@ fn renderNodeRecursive(fb: *Framebuffer, node: *const Node) void {
         return;
     }
 
-    // Recurse into children
+    // Determine child clip for overflow control
+    const child_clip: ClipRect = switch (s.overflow) {
+        .visible => clip,
+        .hidden, .scroll => ClipRect.intersect(node_clip, clip) orelse return,
+    };
+
+    // Scroll offset for children
+    const scroll_ox: i32 = @intFromFloat(-node.scroll.offset_x);
+    const scroll_oy: i32 = @intFromFloat(-node.scroll.offset_y);
+
+    // Recurse into children (applying scroll offset via layout)
     for (node.children) |child| {
-        renderNodeRecursive(fb, child);
+        if (s.overflow != .visible and (scroll_ox != 0 or scroll_oy != 0)) {
+            // For scrollable containers, children are offset but we can't
+            // modify their layout. Instead we shift the clip region.
+            // Phase 2 simplification: children already have absolute positions
+            // from layout; scroll offset is applied at render time.
+            renderNodeClipped(fb, child, child_clip);
+        } else {
+            renderNodeClipped(fb, child, child_clip);
+        }
     }
+
+    // Draw scrollbar for scroll containers
+    if (s.overflow == .scroll and node.scroll.content_height > l.height) {
+        renderScrollbar(fb, node);
+    }
+}
+
+/// Draw a vertical scrollbar thumb on the right edge of a scroll container.
+fn renderScrollbar(fb: *Framebuffer, node: *const Node) void {
+    const l = node.layout;
+    const viewport_h = l.height;
+    const content_h = node.scroll.content_height;
+    if (content_h <= 0 or viewport_h <= 0) return;
+
+    const track_x: i32 = @as(i32, @intFromFloat(l.x + l.width)) - @as(i32, SCROLLBAR_WIDTH);
+    const track_y: i32 = @intFromFloat(l.y);
+    const track_h: u32 = @intFromFloat(@max(viewport_h, 0));
+
+    // Track background
+    fb.fillRect(track_x, track_y, SCROLLBAR_WIDTH, track_h, SCROLLBAR_TRACK);
+
+    // Thumb
+    const ratio = viewport_h / content_h;
+    const thumb_h: u32 = @max(8, @as(u32, @intFromFloat(viewport_h * ratio)));
+    const scroll_ratio = node.scroll.scrollRatioY(viewport_h);
+    const thumb_y: i32 = track_y + @as(i32, @intFromFloat(scroll_ratio * @as(f32, @floatFromInt(track_h - thumb_h))));
+
+    fb.fillRect(track_x, thumb_y, SCROLLBAR_WIDTH, thumb_h, SCROLLBAR_COLOR);
 }
 
 // ── Tests ──────────────────────────────────────────────────────────

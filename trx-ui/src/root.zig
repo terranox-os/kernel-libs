@@ -44,6 +44,7 @@ pub const NodeTag = node_mod.NodeTag;
 pub const LayoutResult = node_mod.LayoutResult;
 pub const BoxOptions = node_mod.BoxOptions;
 pub const TextOptions = node_mod.TextOptions;
+pub const ScrollState = node_mod.ScrollState;
 pub const box = node_mod.box;
 pub const text = node_mod.text;
 
@@ -52,9 +53,12 @@ pub const computeLayout = layout.computeLayout;
 
 pub const text_render = @import("text.zig");
 pub const measureTextWidth = text_render.measureTextWidth;
+pub const measureTextWrapped = text_render.measureTextWrapped;
+pub const renderTextWrapped = text_render.renderTextWrapped;
 
 pub const render = @import("render.zig");
 pub const Framebuffer = render.Framebuffer;
+pub const ClipRect = render.ClipRect;
 pub const renderTree = render.renderTree;
 
 pub const damage = @import("damage.zig");
@@ -68,6 +72,7 @@ pub const FocusState = input.FocusState;
 pub const Key = input.Key;
 pub const hitTest = input.hitTest;
 pub const dispatchClick = input.dispatchClick;
+pub const dispatchScroll = input.dispatchScroll;
 
 pub const platform = @import("platform.zig");
 pub const SYS = platform.SYS;
