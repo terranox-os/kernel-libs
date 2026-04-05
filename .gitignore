@@ -1,3 +1,7 @@
 /target/
 /bazel-*
 MODULE.bazel.lock
+
+# Zig build artifacts
+.zig-cache/
+zig-out/

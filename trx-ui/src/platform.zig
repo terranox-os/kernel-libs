@@ -11,15 +11,20 @@ pub const is_trx = builtin.os.tag == .freestanding;
 
 // ── Syscall numbers (from genesis_syscall.h) ───────────────────────
 
+/// Syscall numbers for TerranoxOS userspace.
+///
+/// **ABI note:** This module targets the TerranoxOS Linux-compat syscall ABI.
+/// Basic ops (EXIT, YIELD, WRITE) use Linux x86_64 numbers so the kernel's
+/// `linux_to_genesis` translation layer maps them to the correct Genesis
+/// shared syscalls (where Genesis 0x0000 = EXIT collides with Linux 0 = read).
+/// TRX-specific syscalls (0x0100+) use Genesis-native numbers and pass
+/// through the translation layer untouched.
 pub const SYS = struct {
-    // Basic ops use Linux x86_64 numbers so the kernel's
-    // linux_to_genesis translation layer maps them correctly.
-    // (Genesis 0x0000 = EXIT but Linux 0 = read — collision.)
+    // Basic ops — Linux x86_64 numbers for kernel compat layer.
     pub const EXIT: u64 = 60; // Linux SYS_exit → GEN_SYS_EXIT
     pub const YIELD: u64 = 24; // Linux SYS_sched_yield → GEN_SYS_YIELD
     pub const WRITE: u64 = 1; // Linux SYS_write (for debug output)
-    // TRX compositor/display/input syscalls (0x0150+) pass through
-    // the translation layer untouched — no Linux number collision.
+    // TRX compositor/display/input syscalls — Genesis-native numbers.
     pub const COMPOSITOR_CREATE: u64 = 0x0152;
     pub const COMPOSITOR_PRESENT: u64 = 0x0153;
     pub const SURFACE_CREATE: u64 = 0x0154;
@@ -204,13 +209,22 @@ pub const InputEventRaw = extern struct {
 
 const testing = @import("std").testing;
 
-test "SYS constants" {
-    try testing.expectEqual(@as(u64, 0x0154), SYS.SURFACE_CREATE);
-    try testing.expectEqual(@as(u64, 0x0153), SYS.COMPOSITOR_PRESENT);
-    try testing.expectEqual(@as(u64, 0x0163), SYS.INPUT_READ_EVENTS);
-    // Basic ops use Linux x86_64 numbers for kernel compat
-    try testing.expectEqual(@as(u64, 24), SYS.YIELD);
+test "basic ops use Linux x86_64 ABI numbers for kernel compat layer" {
     try testing.expectEqual(@as(u64, 60), SYS.EXIT);
+    try testing.expectEqual(@as(u64, 24), SYS.YIELD);
+    try testing.expectEqual(@as(u64, 1), SYS.WRITE);
+}
+
+test "TRX compositor/display/input syscalls use Genesis-native numbers" {
+    try testing.expectEqual(@as(u64, 0x0152), SYS.COMPOSITOR_CREATE);
+    try testing.expectEqual(@as(u64, 0x0153), SYS.COMPOSITOR_PRESENT);
+    try testing.expectEqual(@as(u64, 0x0154), SYS.SURFACE_CREATE);
+    try testing.expectEqual(@as(u64, 0x0155), SYS.SURFACE_DESTROY);
+    try testing.expectEqual(@as(u64, 0x0156), SYS.SURFACE_RESIZE);
+    try testing.expectEqual(@as(u64, 0x0157), SYS.BUFFER_CREATE);
+    try testing.expectEqual(@as(u64, 0x0158), SYS.BUFFER_MAP);
+    try testing.expectEqual(@as(u64, 0x0159), SYS.BUFFER_UNMAP);
+    try testing.expectEqual(@as(u64, 0x0163), SYS.INPUT_READ_EVENTS);
 }
 
 test "InputEventRaw has correct layout" {

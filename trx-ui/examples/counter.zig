@@ -110,7 +110,7 @@ fn trxStart() callconv(.C) noreturn {
         :
         : [nr] "{rax}" (@as(u64, 60)),
           [a1] "{rdi}" (@as(u64, 0)),
-        : "rcx", "r11"
+        : "rcx", "r11", "memory"
     );
     unreachable;
 }
@@ -119,4 +119,5 @@ comptime {
     @export(&trxStart, .{ .name = "_start" });
 }
 
+// Prevent Zig's std _start from being linked in freestanding mode.
 pub const _start = {};
