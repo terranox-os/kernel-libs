@@ -11,6 +11,8 @@ members = [
     "crypto",
     "elf",
     "devicetree",
+    "trx-ui",
+    "trx-compositor",
 ]
 
 [workspace.package]

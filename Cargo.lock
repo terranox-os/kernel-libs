@@ -68,3 +68,17 @@ version = "0.1.0"
 dependencies = [
  "genesis-abi",
 ]
+
+[[package]]
+name = "trx-compositor"
+version = "0.1.0"
+dependencies = [
+ "genesis-abi",
+]
+
+[[package]]
+name = "trx-ui"
+version = "0.1.0"
+dependencies = [
+ "genesis-abi",
+]
