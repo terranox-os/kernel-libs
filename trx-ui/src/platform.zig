@@ -12,8 +12,14 @@ pub const is_trx = builtin.os.tag == .freestanding;
 // ── Syscall numbers (from genesis_syscall.h) ───────────────────────
 
 pub const SYS = struct {
-    pub const EXIT: u64 = 0x0000;
-    pub const YIELD: u64 = 0x0005;
+    // Basic ops use Linux x86_64 numbers so the kernel's
+    // linux_to_genesis translation layer maps them correctly.
+    // (Genesis 0x0000 = EXIT but Linux 0 = read — collision.)
+    pub const EXIT: u64 = 60; // Linux SYS_exit → GEN_SYS_EXIT
+    pub const YIELD: u64 = 24; // Linux SYS_sched_yield → GEN_SYS_YIELD
+    pub const WRITE: u64 = 1; // Linux SYS_write (for debug output)
+    // TRX compositor/display/input syscalls (0x0150+) pass through
+    // the translation layer untouched — no Linux number collision.
     pub const COMPOSITOR_CREATE: u64 = 0x0152;
     pub const COMPOSITOR_PRESENT: u64 = 0x0153;
     pub const SURFACE_CREATE: u64 = 0x0154;
@@ -198,12 +204,13 @@ pub const InputEventRaw = extern struct {
 
 const testing = @import("std").testing;
 
-test "SYS constants match genesis_syscall.h" {
+test "SYS constants" {
     try testing.expectEqual(@as(u64, 0x0154), SYS.SURFACE_CREATE);
     try testing.expectEqual(@as(u64, 0x0153), SYS.COMPOSITOR_PRESENT);
     try testing.expectEqual(@as(u64, 0x0163), SYS.INPUT_READ_EVENTS);
-    try testing.expectEqual(@as(u64, 0x0005), SYS.YIELD);
-    try testing.expectEqual(@as(u64, 0x0000), SYS.EXIT);
+    // Basic ops use Linux x86_64 numbers for kernel compat
+    try testing.expectEqual(@as(u64, 24), SYS.YIELD);
+    try testing.expectEqual(@as(u64, 60), SYS.EXIT);
 }
 
 test "InputEventRaw has correct layout" {
