@@ -37,4 +37,17 @@ pub fn build(b: *std.Build) void {
 
     const run_layout_tests = b.addRunArtifact(layout_tests);
     test_step.dependOn(&run_layout_tests.step);
+
+    // --- examples ---
+    const counter_example = b.addExecutable(.{
+        .name = "counter",
+        .root_source_file = b.path("examples/counter.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    counter_example.root_module.addImport("trx_ui", lib.root_module);
+
+    const install_example = b.addInstallArtifact(counter_example, .{});
+    const example_step = b.step("example", "Build the counter example");
+    example_step.dependOn(&install_example.step);
 }
