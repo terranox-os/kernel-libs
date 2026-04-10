@@ -3,7 +3,6 @@
 /// Wraps the platform GPU syscalls into a safe, no_std-compatible API.
 /// No heap allocation — uses fixed-size slot array (caller provides all memory).
 /// GPU is optional: `probe()` detects availability at runtime.
-
 const platform = @import("platform.zig");
 
 pub const MAX_GPU_BUFFERS: u8 = 8;

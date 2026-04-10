@@ -103,14 +103,14 @@ pub fn main() !void {
 }
 
 // Override _start for freestanding targets — skip argc/argv parsing.
-fn trxStart() callconv(.C) noreturn {
+fn trxStart() callconv(.c) noreturn {
     main() catch {};
     // exit(0) via Linux syscall nr 60
     asm volatile ("syscall"
         :
         : [nr] "{rax}" (@as(u64, 60)),
           [a1] "{rdi}" (@as(u64, 0)),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
     unreachable;
 }

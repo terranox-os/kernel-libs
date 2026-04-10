@@ -3,7 +3,6 @@
 /// 95 ASCII glyphs (0x20-0x7E) packed into a 128x128 A8 (alpha) texture.
 /// 16 glyphs per row, 6 rows = 96 cells (95 used + 1 blank).
 /// Caller provides the 16KB pixel buffer.
-
 const text_mod = @import("text.zig");
 const gpu_mod = @import("gpu.zig");
 const platform = @import("platform.zig");

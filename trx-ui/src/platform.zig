@@ -3,7 +3,6 @@
 /// On real TerranoxOS, these issue syscalls via inline assembly.
 /// In tests, they are no-ops / stubs.  The build system detects the
 /// target: freestanding = real syscalls, native = stubs.
-
 const builtin = @import("builtin");
 
 /// Whether we're running on the real TerranoxOS kernel.
@@ -60,7 +59,7 @@ fn syscall0(nr: u64) i64 {
     return asm volatile ("syscall"
         : [ret] "={rax}" (-> i64),
         : [nr] "{rax}" (nr),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 
@@ -70,7 +69,7 @@ fn syscall1(nr: u64, a1: u64) i64 {
         : [ret] "={rax}" (-> i64),
         : [nr] "{rax}" (nr),
           [a1] "{rdi}" (a1),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 
@@ -81,7 +80,7 @@ fn syscall2(nr: u64, a1: u64, a2: u64) i64 {
         : [nr] "{rax}" (nr),
           [a1] "{rdi}" (a1),
           [a2] "{rsi}" (a2),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 
@@ -93,7 +92,7 @@ fn syscall3(nr: u64, a1: u64, a2: u64, a3: u64) i64 {
           [a1] "{rdi}" (a1),
           [a2] "{rsi}" (a2),
           [a3] "{rdx}" (a3),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 
@@ -106,7 +105,7 @@ fn syscall4(nr: u64, a1: u64, a2: u64, a3: u64, a4: u64) i64 {
           [a2] "{rsi}" (a2),
           [a3] "{rdx}" (a3),
           [a4] "{r10}" (a4),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 
@@ -121,7 +120,7 @@ fn syscall6(nr: u64, a1: u64, a2: u64, a3: u64, a4: u64, a5: u64, a6: u64) i64 {
           [a4] "{r10}" (a4),
           [a5] "{r8}" (a5),
           [a6] "{r9}" (a6),
-        : "rcx", "r11", "memory"
+        : .{ .rcx = true, .r11 = true, .memory = true }
     );
 }
 

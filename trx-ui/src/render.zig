@@ -3,7 +3,6 @@
 /// The software path writes pixels directly into a Framebuffer.
 /// The GPU path emits batch commands (draw_rect, draw_glyph, set_clip)
 /// for submission via gpu_submit. Both walk the same node tree.
-
 const node_mod = @import("node.zig");
 const text_mod = @import("text.zig");
 const color_mod = @import("color.zig");

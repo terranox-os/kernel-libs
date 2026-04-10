@@ -3,7 +3,6 @@
 /// Supports optional GPU rendering: caller provides static buffers
 /// for the glyph atlas and command batch. If GPU is unavailable or
 /// buffers are not provided, falls back to CPU software rendering.
-
 const node_mod = @import("node.zig");
 const layout_mod = @import("layout.zig");
 const render_mod = @import("render.zig");

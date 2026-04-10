@@ -4,7 +4,6 @@
 /// and serializes them into a flat byte buffer for a single `gpu_submit` call.
 /// All command structs are exactly 16 bytes (aligned, cache-friendly).
 /// Caller provides the 64KB batch buffer.
-
 pub const CMD_SIZE: u32 = 16;
 pub const MAX_COMMANDS: u32 = 4096;
 pub const BATCH_BUF_SIZE: u32 = MAX_COMMANDS * CMD_SIZE; // 65,536 bytes

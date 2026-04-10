@@ -3,7 +3,6 @@
 /// Tracks up to MAX_RECTS damaged rectangles per frame.  The render
 /// loop queries dirty regions and only redraws those areas.  If the
 /// tracker overflows, it collapses to a single full-screen rect.
-
 pub const MAX_RECTS: usize = 64;
 
 pub const Rect = struct {
