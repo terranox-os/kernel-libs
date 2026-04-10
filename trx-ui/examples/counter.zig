@@ -25,7 +25,7 @@ fn onIncrement() void {
 
 // ── UI builder ──────────────────────────────────────────────
 
-fn build() *ui.Node {
+fn build() ui.Node {
     // Title
     var title = ui.text("Counter", .{ .font_size = 32, .color = ui.Color.white });
 
@@ -74,7 +74,7 @@ fn build() *ui.Node {
     });
 
     // Root container
-    var root = ui.box(.{
+    const root = ui.box(.{
         .style = .{
             .direction = .column,
             .align_items = .center,
@@ -88,7 +88,7 @@ fn build() *ui.Node {
         .children = &.{ &title, &button_row },
     });
 
-    return &root;
+    return root;
 }
 
 // ── Entry point ─────────────────────────────────────────────

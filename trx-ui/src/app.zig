@@ -23,7 +23,9 @@ pub const FocusState = input_mod.FocusState;
 pub const DamageTracker = damage_mod.DamageTracker;
 
 /// Builder function type — called each frame to produce the UI tree.
-pub const BuildFn = *const fn () *Node;
+/// Returns Node by value so the caller owns it on its stack frame,
+/// avoiding dangling pointers to the builder's locals.
+pub const BuildFn = *const fn () Node;
 
 /// Optional GPU configuration — caller provides static buffers.
 pub const GpuConfig = struct {
@@ -122,22 +124,22 @@ pub const App = struct {
             self.pollInput();
 
             // 2. Build tree
-            const root = self.builder();
+            var root = self.builder();
 
             // 3. Layout
             const w_f: f32 = @floatFromInt(self.width);
             const h_f: f32 = @floatFromInt(self.height);
-            layout_mod.computeLayout(root, w_f, h_f);
+            layout_mod.computeLayout(&root, w_f, h_f);
 
             // 4. Render (only if damaged)
             if (self.damage.isDirty()) {
                 if (self.use_gpu) {
-                    self.renderFrameGpu(root);
+                    self.renderFrameGpu(&root);
                 } else if (self.mapped_buffer) |buf| {
                     const pixel_count = @as(usize, self.width) * @as(usize, self.height);
                     var fb = Framebuffer.init(buf[0..pixel_count], self.width, self.height);
                     fb.clear(Color.BG_PRIMARY);
-                    render_mod.renderTree(&fb, root);
+                    render_mod.renderTree(&fb, &root);
 
                     // Present (CPU path)
                     if (platform.is_trx) {
@@ -208,11 +210,11 @@ pub const App = struct {
     }
 
     /// Run one frame without blocking.  Useful for testing.
-    pub fn runOneFrame(self: *App) *Node {
-        const root = self.builder();
+    pub fn runOneFrame(self: *App) Node {
+        var root = self.builder();
         const w_f: f32 = @floatFromInt(self.width);
         const h_f: f32 = @floatFromInt(self.height);
-        layout_mod.computeLayout(root, w_f, h_f);
+        layout_mod.computeLayout(&root, w_f, h_f);
         return root;
     }
 
@@ -258,8 +260,8 @@ var test_node = Node{
     },
 };
 
-fn testBuilder() *Node {
-    return &test_node;
+fn testBuilder() Node {
+    return test_node;
 }
 
 test "App.init sets dimensions" {

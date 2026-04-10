@@ -7,8 +7,8 @@
 /// ```zig
 /// const ui = @import("trx_ui");
 ///
-/// fn build() *ui.Node {
-///     return &ui.box(.{
+/// fn build() ui.Node {
+///     return ui.box(.{
 ///         .style = .{ .direction = .column, .bg = ui.color.BG_PRIMARY },
 ///         .children = &.{
 ///             &ui.text("Hello TerranoxOS", .{ .font_size = 32 }),
