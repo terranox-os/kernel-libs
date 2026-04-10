@@ -1,9 +1,14 @@
-/// Software renderer — draws node trees into an ARGB32 pixel buffer.
-
+/// Renderer — software (CPU) and GPU command-buffer paths.
+///
+/// The software path writes pixels directly into a Framebuffer.
+/// The GPU path emits batch commands (draw_rect, draw_glyph, set_clip)
+/// for submission via gpu_submit. Both walk the same node tree.
 const node_mod = @import("node.zig");
 const text_mod = @import("text.zig");
 const color_mod = @import("color.zig");
 const layout_mod = @import("layout.zig");
+const batch_mod = @import("batch.zig");
+const atlas_mod = @import("atlas.zig");
 
 pub const Node = node_mod.Node;
 pub const NodeTag = node_mod.NodeTag;
@@ -200,6 +205,106 @@ fn renderScrollbar(fb: *Framebuffer, node: *const Node) void {
     fb.fillRect(track_x, thumb_y, SCROLLBAR_WIDTH, thumb_h, SCROLLBAR_COLOR);
 }
 
+// ── GPU render path ───────────────────────────────────────────────
+
+pub const GpuRenderState = struct {
+    batch: *batch_mod.Batch,
+    atlas: *const atlas_mod.GlyphAtlas,
+    width: u32,
+    height: u32,
+};
+
+/// Render a node tree into GPU batch commands.
+/// Parallel to `renderTree` but emits batch commands instead of pixel writes.
+pub fn renderTreeGpu(state: *GpuRenderState, node: *const Node) void {
+    const full_clip = ClipRect{
+        .x = 0,
+        .y = 0,
+        .w = state.width,
+        .h = state.height,
+    };
+    renderNodeGpu(state, node, full_clip);
+}
+
+fn renderNodeGpu(state: *GpuRenderState, node: *const Node, clip: ClipRect) void {
+    const l = node.layout;
+    const s = node.style;
+    const x: i32 = @intFromFloat(l.x);
+    const y: i32 = @intFromFloat(l.y);
+    const w: u32 = @intFromFloat(@max(l.width, 0));
+    const h: u32 = @intFromFloat(@max(l.height, 0));
+
+    // Check if node is fully outside clip
+    const node_clip = ClipRect{ .x = x, .y = y, .w = w, .h = h };
+    if (ClipRect.intersect(node_clip, clip) == null) return;
+
+    // Background fill
+    if (s.bg.a > 0) {
+        state.batch.addRect(
+            @intCast(x),
+            @intCast(y),
+            @intCast(w),
+            @intCast(h),
+            s.bg.toArgb32(),
+        );
+    }
+
+    // Border (emit 4 rects like strokeRect)
+    if (s.border_width > 0 and s.border_color.a > 0) {
+        const bw: u16 = @intFromFloat(@max(s.border_width, 0));
+        const bcolor = s.border_color.toArgb32();
+        const xi: i16 = @intCast(x);
+        const yi: i16 = @intCast(y);
+        const wi: u16 = @intCast(w);
+        const hi: u16 = @intCast(h);
+        state.batch.addRect(xi, yi, wi, bw, bcolor); // top
+        state.batch.addRect(xi, yi + @as(i16, @intCast(hi)) - @as(i16, @intCast(bw)), wi, bw, bcolor); // bottom
+        state.batch.addRect(xi, yi, bw, hi, bcolor); // left
+        state.batch.addRect(xi + @as(i16, @intCast(wi)) - @as(i16, @intCast(bw)), yi, bw, hi, bcolor); // right
+    }
+
+    // Text content — emit one glyph command per character
+    if (node.tag == .text) {
+        if (node.text_content) |content| {
+            const pad_x: i16 = @intFromFloat(s.padding.left);
+            const pad_y: i16 = @intFromFloat(s.padding.top);
+            const scale: u8 = @intCast(@max(1, s.font_size / text_mod.GLYPH_H));
+            const glyph_advance: i16 = @intCast(text_mod.GLYPH_W * @as(u32, scale));
+            const color = s.color.toArgb32();
+            var cx: i16 = @as(i16, @intCast(x)) + pad_x;
+            const cy: i16 = @as(i16, @intCast(y)) + pad_y;
+            for (content) |ch| {
+                if (ch >= text_mod.FIRST_CHAR and ch <= text_mod.LAST_CHAR) {
+                    state.batch.addGlyph(cx, cy, ch, scale, color);
+                }
+                cx += glyph_advance;
+            }
+        }
+        return;
+    }
+
+    // Determine child clip for overflow control
+    const child_clip: ClipRect = switch (s.overflow) {
+        .visible => clip,
+        .hidden, .scroll => blk: {
+            const clipped = ClipRect.intersect(node_clip, clip) orelse return;
+            // Emit a set_clip command for the GPU
+            state.batch.setClip(
+                @intCast(clipped.x),
+                @intCast(clipped.y),
+                @intCast(clipped.w),
+                @intCast(clipped.h),
+            );
+            break :blk clipped;
+        },
+    };
+
+    // Recurse into children
+    for (node.children) |child| {
+        renderNodeGpu(state, child, child_clip);
+    }
+}
+
 // ── Tests ──────────────────────────────────────────────────────────
 
 const testing = @import("std").testing;
@@ -251,4 +356,114 @@ test "renderTree renders box with bg" {
     };
     renderTree(&fb, &root);
     try testing.expectEqual(Color.ACCENT_PURPLE.toArgb32(), pixels[0]);
+}
+
+// ── GPU render path tests ─────────────────────────────────────────
+
+test "renderTreeGpu emits addRect for box with bg" {
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    var batch_inst = batch_mod.Batch.init(&batch_buf);
+    var atlas_pixels: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    const atlas_inst = atlas_mod.GlyphAtlas.init(&atlas_pixels);
+
+    var state = GpuRenderState{
+        .batch = &batch_inst,
+        .atlas = &atlas_inst,
+        .width = 100,
+        .height = 100,
+    };
+
+    var root = Node{
+        .tag = .box,
+        .style = .{ .bg = Color.ACCENT_PURPLE },
+        .layout = .{ .x = 0, .y = 0, .width = 50, .height = 30 },
+    };
+    renderTreeGpu(&state, &root);
+    try testing.expectEqual(@as(u32, 1), batch_inst.count);
+    // First byte is draw_rect command
+    try testing.expectEqual(@as(u8, 0x01), batch_buf[0]);
+}
+
+test "renderTreeGpu emits glyphs for text node" {
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    var batch_inst = batch_mod.Batch.init(&batch_buf);
+    var atlas_pixels: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    const atlas_inst = atlas_mod.GlyphAtlas.init(&atlas_pixels);
+
+    var state = GpuRenderState{
+        .batch = &batch_inst,
+        .atlas = &atlas_inst,
+        .width = 200,
+        .height = 200,
+    };
+
+    var text_node = Node{
+        .tag = .text,
+        .text_content = "AB",
+        .style = .{ .font_size = 16, .color = Color.white },
+        .layout = .{ .x = 0, .y = 0, .width = 100, .height = 20 },
+    };
+    renderTreeGpu(&state, &text_node);
+    // 2 glyph commands for "AB"
+    try testing.expectEqual(@as(u32, 2), batch_inst.count);
+    try testing.expectEqual(@as(u8, 0x02), batch_buf[0]); // draw_glyph
+    try testing.expectEqual(@as(u8, 0x02), batch_buf[16]); // draw_glyph
+    // Verify char codes
+    try testing.expectEqual(@as(u8, 'A'), batch_buf[2]);
+    try testing.expectEqual(@as(u8, 'B'), batch_buf[18]);
+}
+
+test "renderTreeGpu parent bg before children" {
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    var batch_inst = batch_mod.Batch.init(&batch_buf);
+    var atlas_pixels: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    const atlas_inst = atlas_mod.GlyphAtlas.init(&atlas_pixels);
+
+    var state = GpuRenderState{
+        .batch = &batch_inst,
+        .atlas = &atlas_inst,
+        .width = 200,
+        .height = 200,
+    };
+
+    var child = Node{
+        .tag = .box,
+        .style = .{ .bg = Color.ACCENT_RED },
+        .layout = .{ .x = 10, .y = 10, .width = 20, .height = 20 },
+    };
+    const children = [_]*const Node{&child};
+    var root = Node{
+        .tag = .box,
+        .style = .{ .bg = Color.ACCENT_PURPLE },
+        .children = &children,
+        .layout = .{ .x = 0, .y = 0, .width = 100, .height = 100 },
+    };
+    renderTreeGpu(&state, &root);
+    // 2 rects: parent bg first, then child bg
+    try testing.expectEqual(@as(u32, 2), batch_inst.count);
+    // Both should be draw_rect
+    try testing.expectEqual(@as(u8, 0x01), batch_buf[0]);
+    try testing.expectEqual(@as(u8, 0x01), batch_buf[16]);
+}
+
+test "renderTreeGpu skips transparent bg" {
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    var batch_inst = batch_mod.Batch.init(&batch_buf);
+    var atlas_pixels: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    const atlas_inst = atlas_mod.GlyphAtlas.init(&atlas_pixels);
+
+    var state = GpuRenderState{
+        .batch = &batch_inst,
+        .atlas = &atlas_inst,
+        .width = 100,
+        .height = 100,
+    };
+
+    var root = Node{
+        .tag = .box,
+        .style = .{}, // default bg is transparent (a=0)
+        .layout = .{ .x = 0, .y = 0, .width = 50, .height = 30 },
+    };
+    renderTreeGpu(&state, &root);
+    try testing.expectEqual(@as(u32, 0), batch_inst.count);
 }

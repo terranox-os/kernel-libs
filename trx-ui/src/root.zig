@@ -60,6 +60,8 @@ pub const render = @import("render.zig");
 pub const Framebuffer = render.Framebuffer;
 pub const ClipRect = render.ClipRect;
 pub const renderTree = render.renderTree;
+pub const GpuRenderState = render.GpuRenderState;
+pub const renderTreeGpu = render.renderTreeGpu;
 
 pub const damage = @import("damage.zig");
 pub const DamageTracker = damage.DamageTracker;
@@ -77,8 +79,25 @@ pub const dispatchScroll = input.dispatchScroll;
 pub const platform = @import("platform.zig");
 pub const SYS = platform.SYS;
 
+pub const gpu = @import("gpu.zig");
+pub const GpuContext = gpu.GpuContext;
+pub const GpuBuffer = gpu.GpuBuffer;
+pub const GpuError = gpu.GpuError;
+pub const BufferUsage = gpu.BufferUsage;
+
+pub const atlas = @import("atlas.zig");
+pub const GlyphAtlas = atlas.GlyphAtlas;
+pub const GlyphUV = atlas.GlyphUV;
+
+pub const batch = @import("batch.zig");
+pub const Batch = batch.Batch;
+pub const CmdDrawRect = batch.CmdDrawRect;
+pub const CmdDrawGlyph = batch.CmdDrawGlyph;
+pub const CmdSetClip = batch.CmdSetClip;
+
 const app_mod = @import("app.zig");
 pub const App = app_mod.App;
+pub const GpuConfig = app_mod.GpuConfig;
 
 // Force analysis of all modules for test discovery
 comptime {
@@ -91,5 +110,8 @@ comptime {
     _ = @import("damage.zig");
     _ = @import("input.zig");
     _ = @import("platform.zig");
+    _ = @import("gpu.zig");
+    _ = @import("atlas.zig");
+    _ = @import("batch.zig");
     _ = @import("app.zig");
 }

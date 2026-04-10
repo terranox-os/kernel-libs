@@ -6,7 +6,6 @@
 ///
 /// At runtime, glyphs are scaled to the requested font_size by
 /// integer multiples (nearest-neighbour).
-
 const color_mod = @import("color.zig");
 pub const Color = color_mod.Color;
 

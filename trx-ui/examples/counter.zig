@@ -93,9 +93,31 @@ fn build() *ui.Node {
 
 // ── Entry point ─────────────────────────────────────────────
 
+const builtin = @import("builtin");
+
 pub fn main() !void {
     var app = ui.App.init("Counter App", 400, 300, &build);
     try app.setup();
     app.run();
     app.shutdown();
 }
+
+// Override _start for freestanding targets — skip argc/argv parsing.
+fn trxStart() callconv(.c) noreturn {
+    main() catch {};
+    // exit(0) via Linux syscall nr 60
+    asm volatile ("syscall"
+        :
+        : [nr] "{rax}" (@as(u64, 60)),
+          [a1] "{rdi}" (@as(u64, 0)),
+        : .{ .rcx = true, .r11 = true, .memory = true }
+    );
+    unreachable;
+}
+
+comptime {
+    @export(&trxStart, .{ .name = "_start" });
+}
+
+// Prevent Zig's std _start from being linked in freestanding mode.
+pub const _start = {};

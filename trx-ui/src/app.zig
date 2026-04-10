@@ -1,5 +1,8 @@
 /// App lifecycle — init, run (event loop), shutdown.
-
+///
+/// Supports optional GPU rendering: caller provides static buffers
+/// for the glyph atlas and command batch. If GPU is unavailable or
+/// buffers are not provided, falls back to CPU software rendering.
 const node_mod = @import("node.zig");
 const layout_mod = @import("layout.zig");
 const render_mod = @import("render.zig");
@@ -7,6 +10,9 @@ const damage_mod = @import("damage.zig");
 const input_mod = @import("input.zig");
 const platform = @import("platform.zig");
 const color_mod = @import("color.zig");
+const gpu_mod = @import("gpu.zig");
+const atlas_mod = @import("atlas.zig");
+const batch_mod = @import("batch.zig");
 
 pub const Node = node_mod.Node;
 pub const Color = color_mod.Color;
@@ -18,6 +24,12 @@ pub const DamageTracker = damage_mod.DamageTracker;
 
 /// Builder function type — called each frame to produce the UI tree.
 pub const BuildFn = *const fn () *Node;
+
+/// Optional GPU configuration — caller provides static buffers.
+pub const GpuConfig = struct {
+    atlas_pixels: *[atlas_mod.ATLAS_SIZE]u8,
+    batch_buf: *[batch_mod.BATCH_BUF_SIZE]u8,
+};
 
 /// The main application handle.
 pub const App = struct {
@@ -35,6 +47,13 @@ pub const App = struct {
     buffer_handle: i64 = -1,
     mapped_buffer: ?[*]u32 = null,
 
+    // GPU state (Phase 3)
+    gpu_ctx: gpu_mod.GpuContext = .{},
+    gpu_atlas: ?atlas_mod.GlyphAtlas = null,
+    gpu_batch: ?batch_mod.Batch = null,
+    use_gpu: bool = false,
+    gpu_config: ?GpuConfig = null,
+
     pub fn init(title: []const u8, width: u32, height: u32, builder: BuildFn) App {
         return .{
             .title = title,
@@ -45,8 +64,15 @@ pub const App = struct {
         };
     }
 
+    /// Initialize with optional GPU rendering support.
+    pub fn initWithGpu(title: []const u8, width: u32, height: u32, builder: BuildFn, gpu_config: GpuConfig) App {
+        var app = init(title, width, height, builder);
+        app.gpu_config = gpu_config;
+        return app;
+    }
+
     /// Initialise platform resources (compositor, surface, buffer).
-    /// No-op on non-TRX targets.
+    /// No-op on non-TRX targets. Probes GPU if GpuConfig was provided.
     pub fn setup(self: *App) !void {
         if (!platform.is_trx) return;
 
@@ -60,6 +86,23 @@ pub const App = struct {
         const buf_size = @as(u64, self.width) * @as(u64, self.height) * 4;
         self.buffer_handle = try platform.bufferCreate(buf_size);
         self.mapped_buffer = try platform.bufferMap(self.buffer_handle);
+
+        // Probe GPU if caller provided buffers
+        if (self.gpu_config) |cfg| {
+            self.gpu_ctx = gpu_mod.GpuContext.probe();
+            if (self.gpu_ctx.isAvailable()) {
+                var atlas_inst = atlas_mod.GlyphAtlas.init(cfg.atlas_pixels);
+                atlas_inst.rasterize();
+                atlas_inst.uploadToGpu(&self.gpu_ctx) catch {
+                    // GPU atlas upload failed — fall back to CPU
+                    self.gpu_ctx.deinit();
+                    return;
+                };
+                self.gpu_atlas = atlas_inst;
+                self.gpu_batch = batch_mod.Batch.init(cfg.batch_buf);
+                self.use_gpu = true;
+            }
+        }
     }
 
     /// Run the main event loop.  Blocks until `self.running` is set to false.
@@ -88,26 +131,28 @@ pub const App = struct {
 
             // 4. Render (only if damaged)
             if (self.damage.isDirty()) {
-                if (self.mapped_buffer) |buf| {
+                if (self.use_gpu) {
+                    self.renderFrameGpu(root);
+                } else if (self.mapped_buffer) |buf| {
                     const pixel_count = @as(usize, self.width) * @as(usize, self.height);
                     var fb = Framebuffer.init(buf[0..pixel_count], self.width, self.height);
                     fb.clear(Color.BG_PRIMARY);
                     render_mod.renderTree(&fb, root);
+
+                    // Present (CPU path)
+                    if (platform.is_trx) {
+                        platform.compositorPresent(
+                            self.compositor_handle,
+                            self.surface_handle,
+                            self.buffer_handle,
+                        ) catch {};
+                    }
                 }
                 self.damage.reset();
-
-                // 5. Present
-                if (platform.is_trx) {
-                    platform.compositorPresent(
-                        self.compositor_handle,
-                        self.surface_handle,
-                        self.buffer_handle,
-                    ) catch {};
-                }
             }
 
-            // Yield CPU
-            if (platform.is_trx) {
+            // Yield CPU (when not GPU — GPU path uses fence sync)
+            if (!self.use_gpu and platform.is_trx) {
                 platform.yield();
             }
         }
@@ -120,6 +165,10 @@ pub const App = struct {
 
     /// Clean up platform resources.
     pub fn shutdown(self: *App) void {
+        if (self.use_gpu) {
+            self.gpu_ctx.deinit();
+            self.use_gpu = false;
+        }
         if (!platform.is_trx) return;
         if (self.buffer_handle >= 0) {
             platform.bufferUnmap(self.buffer_handle);
@@ -127,6 +176,35 @@ pub const App = struct {
         if (self.surface_handle >= 0) {
             platform.surfaceDestroy(self.surface_handle);
         }
+    }
+
+    /// Render one frame via the GPU command-buffer path.
+    /// On error, falls back to CPU permanently.
+    fn renderFrameGpu(self: *App, root: *Node) void {
+        var b = &(self.gpu_batch orelse return);
+        b.reset();
+
+        if (self.gpu_atlas) |*a| {
+            var gpu_state = render_mod.GpuRenderState{
+                .batch = b,
+                .atlas = a,
+                .width = self.width,
+                .height = self.height,
+            };
+            render_mod.renderTreeGpu(&gpu_state, root);
+        }
+
+        const cmd_slice = b.commandSlice();
+        if (cmd_slice.len == 0) return;
+
+        const fence = self.gpu_ctx.submit(cmd_slice) catch {
+            self.use_gpu = false; // one-way fallback
+            return;
+        };
+        self.gpu_ctx.waitFence(fence) catch {
+            self.use_gpu = false; // one-way fallback
+            return;
+        };
     }
 
     /// Run one frame without blocking.  Useful for testing.
@@ -203,4 +281,32 @@ test "App.stop sets running false" {
     app.running = true;
     app.stop();
     try testing.expect(!app.running);
+}
+
+test "App.init without GPU config has use_gpu false" {
+    const app = App.init("Test", 800, 600, &testBuilder);
+    try testing.expect(!app.use_gpu);
+    try testing.expect(app.gpu_config == null);
+}
+
+test "App.initWithGpu stores GPU config" {
+    var atlas_buf: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    const app = App.initWithGpu("Test", 800, 600, &testBuilder, .{
+        .atlas_pixels = &atlas_buf,
+        .batch_buf = &batch_buf,
+    });
+    try testing.expect(app.gpu_config != null);
+    try testing.expect(!app.use_gpu); // GPU not probed until setup()
+}
+
+test "App.setup on non-trx does not enable GPU" {
+    var atlas_buf: [atlas_mod.ATLAS_SIZE]u8 = [_]u8{0} ** atlas_mod.ATLAS_SIZE;
+    var batch_buf: [batch_mod.BATCH_BUF_SIZE]u8 = [_]u8{0} ** batch_mod.BATCH_BUF_SIZE;
+    var app = App.initWithGpu("Test", 800, 600, &testBuilder, .{
+        .atlas_pixels = &atlas_buf,
+        .batch_buf = &batch_buf,
+    });
+    try app.setup(); // no-op on host
+    try testing.expect(!app.use_gpu); // GPU not available on host
 }
