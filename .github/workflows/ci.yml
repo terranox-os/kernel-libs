@@ -341,3 +341,70 @@ jobs:
               -machdep x86_64 \
               "$src" || true
           done
+
+  genesis-abi-guard:
+    # Enforces version discipline on the published genesis-abi ABI surface.
+    # The `genesis-abi-vN.N.N` tag is consumed by trx-libc, trx-ui, and
+    # terranox-desktop's trx-compositor — silent ABI drift would break them.
+    name: genesis-abi Change Discipline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history for diff against base
+
+      - name: Verify CHANGELOG entry or bypass label
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          set -euo pipefail
+
+          # Files defining the ABI surface that downstream consumers pin via tag.
+          # Excludes tests/, README, examples — only the contract itself.
+          changed=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- \
+            'genesis-abi/include/' \
+            'genesis-abi/src/lib.rs' \
+            'genesis-abi/Cargo.toml' || true)
+
+          if [ -z "$changed" ]; then
+            echo "No genesis-abi ABI surface changes — guard satisfied."
+            exit 0
+          fi
+
+          echo "ABI surface files changed in this PR:"
+          echo "$changed" | sed 's/^/  /'
+          echo ""
+
+          # Bypass label: trivial changes (comments, formatting, internal docs,
+          # test-only edits) that don't affect the ABI contract.
+          if [[ ",${LABELS}," == *",abi-no-bump,"* ]]; then
+            echo "Label 'abi-no-bump' present — bypassing CHANGELOG check."
+            exit 0
+          fi
+
+          # Real gate: CHANGELOG.md [Unreleased] section must mention genesis-abi.
+          # Awk extracts the [Unreleased] block, grep checks for the marker.
+          unreleased=$(awk '/^## \[Unreleased\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md)
+
+          if echo "$unreleased" | grep -qi 'genesis-abi'; then
+            echo "Found 'genesis-abi' entry in CHANGELOG.md [Unreleased] — guard satisfied."
+            exit 0
+          fi
+
+          echo "::error::genesis-abi ABI surface changed but no CHANGELOG entry found."
+          echo ""
+          echo "The genesis-abi tag is a published contract — downstream consumers"
+          echo "(trx-libc, trx-ui, terranox-desktop's trx-compositor) all pin to it."
+          echo "Silent ABI drift here breaks them."
+          echo ""
+          echo "To fix this, do ONE of:"
+          echo ""
+          echo "  1. Add an entry under '## [Unreleased]' in CHANGELOG.md mentioning"
+          echo "     'genesis-abi' (describe what changed and why)."
+          echo ""
+          echo "  2. Apply the 'abi-no-bump' label to this PR — for trivial changes"
+          echo "     only (comments, formatting, internal docs, test-only edits"
+          echo "     that don't alter the ABI surface)."
+          exit 1

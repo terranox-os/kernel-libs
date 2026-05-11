@@ -127,7 +127,7 @@ External consumers of `genesis-abi`: [`trx-libc`](https://github.com/terranox-os
 
 ## CI Pipeline (`.github/workflows/ci.yml`)
 
-Eight jobs run on push/PR to `main`:
+Nine jobs run on push/PR to `main` (the last is PR-only):
 
 | Job | What it checks |
 |-----|---------------|
@@ -139,5 +139,6 @@ Eight jobs run on push/PR to `main`:
 | `c-build-test` | GCC compile all C sources with `-Werror -Wpedantic -ffreestanding`, run all C test binaries |
 | `abi-drift-check` | Verify error code counts, syscall counts, and struct sizes match between C headers and Rust mirror |
 | `frama-c` | Frama-C WP verification of ACSL annotations on all C sources (primitives, bitops, kfmt, alloc) |
+| `genesis-abi-guard` (PR-only) | If a PR touches `genesis-abi/include/`, `genesis-abi/src/lib.rs`, or `genesis-abi/Cargo.toml`, requires either a `genesis-abi` mention under `## [Unreleased]` in CHANGELOG.md OR the `abi-no-bump` label. Protects the published `genesis-abi-vN.N.N` tag that trx-libc, trx-ui, and terranox-desktop's trx-compositor pin to. |
 
 Run Frama-C locally: `./scripts/frama-c-verify.sh` (full proofs) or `./scripts/frama-c-verify.sh --check-only` (parse annotations only).
