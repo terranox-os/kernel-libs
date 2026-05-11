@@ -9,13 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- **trx-ui**: Extracted to its own repository [`terranox-os/trx-ui`](https://github.com/terranox-os/trx-ui). Zig UI toolkit (declarative tree builder, flexbox, software + GPU renderers, TRX syscall wrappers). Full commit history preserved via `git filter-repo`. Per [TRX-DOC-0813](https://github.com/terranox-os/terranox-os/blob/develop-0.5/docs/project/TRX-DOC-0813-repo-ownership-map.md) repo ownership map.
+- **trx-compositor**: Extracted to [`terranox-os/terranox-desktop`](https://github.com/terranox-os/terranox-desktop) as `crates/trx-compositor/`. Rust ECS-based compositor runtime (custom Bevy-style ECS, Flexbox layout, software/DRM/GPU render backends, TRXS v1 binary scene format). Full commit history preserved via `git filter-repo` (PRs #46-#52). The new home pins `genesis-abi` via git tag instead of path dep.
+  - Per [TRX-DOC-0813 repo ownership map](https://github.com/terranox-os/terranox-os/blob/develop-0.5/docs/project/TRX-DOC-0813-repo-ownership-map.md). trx-compositor is *not* the v0.3/v0.4 product compositor (tinywl/labwc remain) — it's a TRX-native UI experiment co-located with desktop clients.
+  - Test count drops from 543 (399 Rust + 144 C) to **325 (181 Rust + 144 C)**.
+- **trx-ui**: Extracted to its own repository [`terranox-os/trx-ui`](https://github.com/terranox-os/trx-ui). Zig UI toolkit (declarative tree builder, flexbox, software + GPU renderers, TRX syscall wrappers). Full commit history preserved via `git filter-repo`.
   - New repo pins genesis-abi via submodule at tag [`genesis-abi-v0.1.0`](https://github.com/terranox-os/kernel-libs/releases/tag/genesis-abi-v0.1.0).
-  - Test count drops from 646 (399 Rust + 144 C + 103 Zig) to 543 (399 Rust + 144 C).
 
 ### Added
 
-- **genesis-abi**: First scoped release tag [`genesis-abi-v0.1.0`](https://github.com/terranox-os/kernel-libs/releases/tag/genesis-abi-v0.1.0) so downstream consumers (trx-libc, trx-ui, future terranox-desktop integration) can pin to a stable ABI snapshot rather than tracking `main`.
+- **genesis-abi**: First scoped release tag [`genesis-abi-v0.1.0`](https://github.com/terranox-os/kernel-libs/releases/tag/genesis-abi-v0.1.0) so downstream consumers (trx-libc, trx-ui, terranox-desktop's trx-compositor) can pin to a stable ABI snapshot rather than tracking `main`. Bump deliberately when the syscall ABI or capability model changes.
+
+### Changed
+
+- **kernel-libs charter restored**: Repo is now back to its original purpose — freestanding zero-dependency shared libraries for TerranoxOS, GenesisOS-RT, and HermeticaOS only. The application-layer projects (trx-compositor, trx-ui) that had accumulated in this repo have been moved to repos that match their language and consumer model.
 
 ## [0.2.0] - 2026-03-29
 
