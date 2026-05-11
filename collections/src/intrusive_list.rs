@@ -21,6 +21,12 @@ pub struct ListNode {
     pub prev: *mut ListNode,
 }
 
+impl Default for ListNode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ListNode {
     /// Create a new unlinked node (points to itself).
     pub const fn new() -> Self {
@@ -46,13 +52,19 @@ impl ListNode {
     /// # Safety
     /// `node` must be a valid pointer.
     pub unsafe fn is_unlinked(node: *const ListNode) -> bool {
-        unsafe { (*node).next == node as *mut ListNode || (*node).next.is_null() }
+        unsafe { core::ptr::eq((*node).next, node) || (*node).next.is_null() }
     }
 }
 
 /// An intrusive doubly-linked list with a sentinel head node.
 pub struct IntrusiveList {
     head: ListNode,
+}
+
+impl Default for IntrusiveList {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl IntrusiveList {
@@ -71,8 +83,7 @@ impl IntrusiveList {
 
     /// Returns true if the list is empty.
     pub fn is_empty(&self) -> bool {
-        let head_ptr = &self.head as *const ListNode;
-        self.head.next == head_ptr as *mut ListNode
+        core::ptr::eq(self.head.next, &self.head)
     }
 
     /// Insert `node` at the front of the list (after head).
@@ -104,6 +115,9 @@ impl IntrusiveList {
     }
 
     /// Remove and return the front node. Returns null if empty.
+    ///
+    /// # Safety
+    /// The list must be initialized via `init()` before calling.
     pub unsafe fn pop_front(&mut self) -> *mut ListNode {
         if self.is_empty() {
             return ptr::null_mut();
@@ -114,6 +128,9 @@ impl IntrusiveList {
     }
 
     /// Remove and return the back node. Returns null if empty.
+    ///
+    /// # Safety
+    /// The list must be initialized via `init()` before calling.
     pub unsafe fn pop_back(&mut self) -> *mut ListNode {
         if self.is_empty() {
             return ptr::null_mut();

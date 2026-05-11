@@ -53,6 +53,12 @@ pub struct RbTree {
     len: usize,
 }
 
+impl Default for RbTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RbTree {
     /// Create an empty tree.
     pub const fn new() -> Self {

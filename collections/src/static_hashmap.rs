@@ -58,6 +58,12 @@ pub struct StaticHashMap<K, V, const N: usize> {
     len: usize,
 }
 
+impl<K: Eq + Hashable, V, const N: usize> Default for StaticHashMap<K, V, N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K: Eq + Hashable, V, const N: usize> StaticHashMap<K, V, N> {
     /// Create an empty hash map.
     ///
@@ -106,10 +112,8 @@ impl<K: Eq + Hashable, V, const N: usize> StaticHashMap<K, V, N> {
                     self.len += 1;
                     return Ok(None);
                 }
-                Slot::Tombstone => {
-                    if first_tombstone.is_none() {
-                        first_tombstone = Some(idx);
-                    }
+                Slot::Tombstone if first_tombstone.is_none() => {
+                    first_tombstone = Some(idx);
                 }
                 _ => {}
             }

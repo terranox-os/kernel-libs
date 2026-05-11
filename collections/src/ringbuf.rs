@@ -18,6 +18,12 @@ pub struct RingBuf<T, const N: usize> {
 unsafe impl<T: Send, const N: usize> Send for RingBuf<T, N> {}
 unsafe impl<T: Send, const N: usize> Sync for RingBuf<T, N> {}
 
+impl<T, const N: usize> Default for RingBuf<T, N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, const N: usize> RingBuf<T, N> {
     /// Create a new empty ring buffer. Usable capacity is `N - 1`.
     pub const fn new() -> Self {

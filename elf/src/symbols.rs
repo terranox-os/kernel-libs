@@ -48,7 +48,6 @@ impl Elf64Sym {
 }
 
 /// Parse a single ELF64 symbol at the given byte offset.
-#[must_use]
 pub fn parse_elf64_sym(data: &[u8], offset: usize) -> Result<Elf64Sym, ElfError> {
     if offset + 24 > data.len() {
         return Err(ElfError::SectionOutOfBounds);

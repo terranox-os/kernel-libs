@@ -132,7 +132,6 @@ pub(crate) fn read_u64_le(data: &[u8], off: usize) -> u64 {
 }
 
 /// Parse an ELF64 file header from a byte slice.
-#[must_use]
 pub fn parse_elf64_header(data: &[u8]) -> Result<Elf64Header, ElfError> {
     if data.len() < 64 {
         return Err(ElfError::TooShort);
@@ -164,7 +163,6 @@ pub fn parse_elf64_header(data: &[u8]) -> Result<Elf64Header, ElfError> {
 }
 
 /// Parse an ELF64 section header at the given index.
-#[must_use]
 pub fn parse_elf64_shdr(data: &[u8], hdr: &Elf64Header, index: u16) -> Result<Elf64Shdr, ElfError> {
     if index >= hdr.shnum {
         return Err(ElfError::InvalidIndex);
@@ -189,7 +187,6 @@ pub fn parse_elf64_shdr(data: &[u8], hdr: &Elf64Header, index: u16) -> Result<El
 }
 
 /// Parse an ELF64 program header at the given index.
-#[must_use]
 pub fn parse_elf64_phdr(data: &[u8], hdr: &Elf64Header, index: u16) -> Result<Elf64Phdr, ElfError> {
     if index >= hdr.phnum {
         return Err(ElfError::InvalidIndex);
@@ -212,7 +209,6 @@ pub fn parse_elf64_phdr(data: &[u8], hdr: &Elf64Header, index: u16) -> Result<El
 }
 
 /// Get a section's raw data from the ELF file.
-#[must_use]
 pub fn section_data<'a>(data: &'a [u8], shdr: &Elf64Shdr) -> Result<&'a [u8], ElfError> {
     if shdr.sh_type == SHT_NOBITS {
         return Ok(&[]);
@@ -226,8 +222,7 @@ pub fn section_data<'a>(data: &'a [u8], shdr: &Elf64Shdr) -> Result<&'a [u8], El
 }
 
 /// Look up a null-terminated string in a string table section.
-#[must_use]
-pub fn strtab_lookup<'a>(strtab_data: &'a [u8], offset: u32) -> Option<&'a str> {
+pub fn strtab_lookup(strtab_data: &[u8], offset: u32) -> Option<&str> {
     let start = offset as usize;
     if start >= strtab_data.len() {
         return None;
