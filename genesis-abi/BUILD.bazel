@@ -41,7 +41,8 @@ cc_test(
 
 rust_library(
     name = "genesis_abi_rs",
-    srcs = ["src/lib.rs"],
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/lib.rs",
     crate_name = "genesis_abi",
     edition = "2021",
     crate_features = [],
