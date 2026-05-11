@@ -641,8 +641,14 @@ mod tests {
         // Property 1: min and max are valid
         let min_ptr = tree.min();
         let max_ptr = tree.max();
-        assert!(!min_ptr.is_null(), "min must be non-null for non-empty tree");
-        assert!(!max_ptr.is_null(), "max must be non-null for non-empty tree");
+        assert!(
+            !min_ptr.is_null(),
+            "min must be non-null for non-empty tree"
+        );
+        assert!(
+            !max_ptr.is_null(),
+            "max must be non-null for non-empty tree"
+        );
 
         // Property 2 & 3: inorder traversal is sorted and count matches len
         let iter = RbInorderIter::new(tree);
@@ -651,12 +657,7 @@ mod tests {
         for node in iter {
             let key = unsafe { (*node).key };
             if let Some(prev) = prev_key {
-                assert!(
-                    key >= prev,
-                    "inorder violation: {} followed {}",
-                    key,
-                    prev
-                );
+                assert!(key >= prev, "inorder violation: {} followed {}", key, prev);
             }
             prev_key = Some(key);
             count += 1;

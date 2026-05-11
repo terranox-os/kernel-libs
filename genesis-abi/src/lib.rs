@@ -145,39 +145,39 @@ impl GenResult {
     pub const fn to_errno(self) -> i32 {
         match self.0 {
             0 => 0,
-            -1 => posix_errno::EINVAL,    // INVALID_ARG
-            -2 => posix_errno::ENOMEM,    // OUT_OF_MEMORY
-            -3 => posix_errno::ENOENT,    // NOT_FOUND
-            -4 => posix_errno::EEXIST,    // ALREADY_EXISTS
-            -5 => posix_errno::EINVAL,    // BUFFER_TOO_SMALL
-            -6 => posix_errno::ENOSYS,    // NOT_SUPPORTED
-            -7 => posix_errno::EBUSY,     // BUSY
-            -8 => posix_errno::ETIMEDOUT, // TIMEOUT
-            -9 => posix_errno::EINTR,     // INTERRUPTED
-            -10 => posix_errno::EINVAL,   // OVERFLOW
-            -16 => posix_errno::EPERM,    // PERMISSION_DENIED
-            -17 => posix_errno::EACCES,   // ACCESS_VIOLATION
-            -18 => posix_errno::EPERM,    // INVALID_CAPABILITY
-            -32 => posix_errno::EIO,      // IO
-            -34 => posix_errno::EFAULT,   // BAD_ADDRESS
+            -1 => posix_errno::EINVAL,     // INVALID_ARG
+            -2 => posix_errno::ENOMEM,     // OUT_OF_MEMORY
+            -3 => posix_errno::ENOENT,     // NOT_FOUND
+            -4 => posix_errno::EEXIST,     // ALREADY_EXISTS
+            -5 => posix_errno::EINVAL,     // BUFFER_TOO_SMALL
+            -6 => posix_errno::ENOSYS,     // NOT_SUPPORTED
+            -7 => posix_errno::EBUSY,      // BUSY
+            -8 => posix_errno::ETIMEDOUT,  // TIMEOUT
+            -9 => posix_errno::EINTR,      // INTERRUPTED
+            -10 => posix_errno::EINVAL,    // OVERFLOW
+            -16 => posix_errno::EPERM,     // PERMISSION_DENIED
+            -17 => posix_errno::EACCES,    // ACCESS_VIOLATION
+            -18 => posix_errno::EPERM,     // INVALID_CAPABILITY
+            -32 => posix_errno::EIO,       // IO
+            -34 => posix_errno::EFAULT,    // BAD_ADDRESS
             -33 => posix_errno::ENOENT,    // DEVICE_OFFLINE
-            -35 => posix_errno::EPIPE,    // CHANNEL_CLOSED
-            -36 => posix_errno::ENOENT,   // DISPLAY_OFFLINE
-            -37 => posix_errno::EPIPE,    // GPU_ERROR
-            -48 => posix_errno::EINVAL,   // INVALID_FORMAT
-            -49 => posix_errno::EINVAL,   // CHECKSUM_MISMATCH
-            -50 => posix_errno::EINVAL,   // VERSION_MISMATCH
-            -64 => posix_errno::ENOENT,   // MODULE_LOAD_FAILED
-            -65 => posix_errno::EPERM,    // MODULE_INIT_FAILED
-            -66 => posix_errno::ENOENT,   // MODULE_NOT_FOUND
-            -67 => posix_errno::EINVAL,   // MODULE_INCOMPATIBLE
+            -35 => posix_errno::EPIPE,     // CHANNEL_CLOSED
+            -36 => posix_errno::ENOENT,    // DISPLAY_OFFLINE
+            -37 => posix_errno::EPIPE,     // GPU_ERROR
+            -48 => posix_errno::EINVAL,    // INVALID_FORMAT
+            -49 => posix_errno::EINVAL,    // CHECKSUM_MISMATCH
+            -50 => posix_errno::EINVAL,    // VERSION_MISMATCH
+            -64 => posix_errno::ENOENT,    // MODULE_LOAD_FAILED
+            -65 => posix_errno::EPERM,     // MODULE_INIT_FAILED
+            -66 => posix_errno::ENOENT,    // MODULE_NOT_FOUND
+            -67 => posix_errno::EINVAL,    // MODULE_INCOMPATIBLE
             -80 => posix_errno::ETIMEDOUT, // DEADLINE_MISS
-            -81 => posix_errno::EAGAIN,   // PRIORITY_INV
-            -82 => posix_errno::ENOMEM,   // STACK_OVERFLOW
-            -96 => posix_errno::ENOSYS,   // BAD_SYSCALL
-            -97 => posix_errno::EBADF,    // BAD_HANDLE
-            -98 => posix_errno::EINTR,    // SYSCALL_INTERRUPTED
-            -99 => posix_errno::ENOMEM,   // HANDLE_LIMIT
+            -81 => posix_errno::EAGAIN,    // PRIORITY_INV
+            -82 => posix_errno::ENOMEM,    // STACK_OVERFLOW
+            -96 => posix_errno::ENOSYS,    // BAD_SYSCALL
+            -97 => posix_errno::EBADF,     // BAD_HANDLE
+            -98 => posix_errno::EINTR,     // SYSCALL_INTERRUPTED
+            -99 => posix_errno::ENOMEM,    // HANDLE_LIMIT
             _ => posix_errno::EINVAL,
         }
     }
@@ -1552,7 +1552,8 @@ mod tests {
             .union(trx_cap::TIME)
             .union(trx_cap::SYSTEM);
         assert_eq!(
-            computed, trx_cap::ROOT,
+            computed,
+            trx_cap::ROOT,
             "ROOT must equal union of all 12 domain parents"
         );
     }
