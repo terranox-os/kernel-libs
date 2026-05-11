@@ -26,6 +26,12 @@ pub struct Once<T> {
 unsafe impl<T: Send + Sync> Send for Once<T> {}
 unsafe impl<T: Send + Sync> Sync for Once<T> {}
 
+impl<T> Default for Once<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Once<T> {
     /// Create an uninitialized `Once`.
     pub const fn new() -> Self {

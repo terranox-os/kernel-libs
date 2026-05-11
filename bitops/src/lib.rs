@@ -41,10 +41,9 @@ pub fn bit_toggle(bitmap: &mut [u32], bit: u32) {
 /// Find first set bit in the first `nbits` of `bitmap`.
 /// Returns `None` if no bit is set.
 pub fn bitmap_ffs(bitmap: &[u32], nbits: u32) -> Option<u32> {
-    let nwords = ((nbits as usize) + 31) / 32;
+    let nwords = (nbits as usize).div_ceil(32);
 
-    for i in 0..nwords {
-        let word = bitmap[i];
+    for (i, &word) in bitmap[..nwords].iter().enumerate() {
         if word != 0 {
             let bit = (i as u32) * 32 + word.trailing_zeros();
             if bit < nbits {
@@ -60,10 +59,10 @@ pub fn bitmap_ffs(bitmap: &[u32], nbits: u32) -> Option<u32> {
 /// Find first zero bit in the first `nbits` of `bitmap`.
 /// Returns `None` if all bits are set.
 pub fn bitmap_ffz(bitmap: &[u32], nbits: u32) -> Option<u32> {
-    let nwords = ((nbits as usize) + 31) / 32;
+    let nwords = (nbits as usize).div_ceil(32);
 
-    for i in 0..nwords {
-        let word = !bitmap[i];
+    for (i, &raw) in bitmap[..nwords].iter().enumerate() {
+        let word = !raw;
         if word != 0 {
             let bit = (i as u32) * 32 + word.trailing_zeros();
             if bit < nbits {
@@ -82,8 +81,8 @@ pub fn bitmap_popcount(bitmap: &[u32], nbits: u32) -> u32 {
     let remaining = nbits % 32;
     let mut count = 0u32;
 
-    for i in 0..full_words {
-        count += bitmap[i].count_ones();
+    for word in &bitmap[..full_words] {
+        count += word.count_ones();
     }
 
     if remaining > 0 {
@@ -140,10 +139,8 @@ pub fn bitmap_clear_range(bitmap: &mut [u32], start: u32, count: u32) {
 
 /// Clear all bits in `bitmap` (first `nbits` bits).
 pub fn bitmap_clear_all(bitmap: &mut [u32], nbits: u32) {
-    let nwords = ((nbits as usize) + 31) / 32;
-    for i in 0..nwords {
-        bitmap[i] = 0;
-    }
+    let nwords = (nbits as usize).div_ceil(32);
+    bitmap[..nwords].fill(0);
 }
 
 /// Iterator over set bits in a bitmap.
@@ -188,7 +185,7 @@ impl Iterator for BitIter<'_> {
             }
 
             self.word_idx += 1;
-            let nwords = ((self.nbits as usize) + 31) / 32;
+            let nwords = (self.nbits as usize).div_ceil(32);
             if self.word_idx as usize >= nwords {
                 return None;
             }

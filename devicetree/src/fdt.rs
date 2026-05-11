@@ -171,14 +171,13 @@ pub fn find_node_properties<'a>(
                 let name = core::str::from_utf8(&data[name_start..offset]).unwrap_or("");
                 offset = align4(offset + 1); // skip null + align
 
-                if !in_target {
-                    if current_path_depth < target_parts.len()
-                        && node_name_matches(name, &target_parts[current_path_depth])
-                    {
-                        current_path_depth += 1;
-                        if current_path_depth == target_parts.len() {
-                            in_target = true;
-                        }
+                if !in_target
+                    && current_path_depth < target_parts.len()
+                    && node_name_matches(name, &target_parts[current_path_depth])
+                {
+                    current_path_depth += 1;
+                    if current_path_depth == target_parts.len() {
+                        in_target = true;
                     }
                 }
                 if in_target && !root_entered {

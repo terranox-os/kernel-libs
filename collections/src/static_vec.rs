@@ -9,6 +9,12 @@ pub struct StaticVec<T, const N: usize> {
     len: usize,
 }
 
+impl<T, const N: usize> Default for StaticVec<T, N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, const N: usize> StaticVec<T, N> {
     /// Create an empty `StaticVec`.
     pub const fn new() -> Self {
@@ -81,6 +87,7 @@ impl<T, const N: usize> StaticVec<T, N> {
     }
 
     /// Access by index. Panics if out of bounds.
+    #[allow(clippy::should_implement_trait)]
     pub fn index(&self, index: usize) -> &T {
         assert!(index < self.len, "StaticVec: index out of bounds");
         // Safety: elements 0..len are initialized
