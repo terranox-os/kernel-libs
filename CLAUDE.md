@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-kernel-libs is a shared library repository of freestanding, zero-dependency crates (Rust) and static libraries (C) consumed by three OS kernels: **TerranoxOS** (security-focused desktop), **GenesisOS-RT** (robotics RTOS), and **HermeticaOS** (experimental hot-swap modules). Authoritative specifications: `terranoxos-syscall-ref.md` (syscall ABI), `terranoxos-shared-infra-plan.md` (repo structure), `terranoxos-libc-plan.md` (Zig POSIX libc).
+kernel-libs is a shared library repository of freestanding, zero-dependency crates (Rust) and static libraries (C) consumed by three OS kernels: **TerranoxOS** (security-focused desktop), **GenesisOS-RT** (robotics RTOS), and **HermeticaOS** (experimental hot-swap modules).
+
+The repo also hosts one TerranoxOS-specific runtime layer:
+
+- **`trx-compositor/`** — Rust ECS-based compositor (custom Bevy-style ECS, Flexbox layout, software/DRM/GPU render backends, TRXS v1 binary scene format).
+
+This is *not* a kernel library — it breaks the freestanding zero-dependency rule (uses `extern crate alloc`, targets the TRX userspace ABI specifically). Treat it as application-layer code that happens to live in the same repo.
+
+> **Migration note (2026-05-11)**: `trx-ui/` was extracted to [`terranox-os/trx-ui`](https://github.com/terranox-os/trx-ui) as its own repo. `trx-compositor/` is slated to move to [`terranox-os/terranox-desktop`](https://github.com/terranox-os/terranox-desktop) as `crates/trx-compositor/` (Migration B in TRX-DOC-0813's repo ownership map).
+
+Authoritative specifications: `terranoxos-syscall-ref.md` (syscall ABI), `terranoxos-shared-infra-plan.md` (repo structure), `terranoxos-libc-plan.md` (Zig POSIX libc).
 
 ## Build & Test Commands
 
@@ -49,8 +59,11 @@ cargo build --workspace --target x86_64-unknown-none
 | crypto | `kernel-crypto` | `//crypto:gen_crypto` | `//crypto:kernel_crypto` |
 | elf | `kernel-elf` | — | `//elf:kernel_elf` |
 | devicetree | `kernel-devicetree` | — | `//devicetree:kernel_devicetree` |
+| trx-compositor | `trx-compositor` | — | (cargo only — not in Bazel) |
 
 ## Design Rules (All Code Must Follow)
+
+These apply to the kernel libraries (`genesis-abi` through `devicetree`). The application-layer project `trx-compositor` follows rules 1, 4, and 6 but intentionally relaxes 2, 3, and 5 — see its own section below.
 
 1. **Zero upward dependencies** — libraries never call into any OS kernel or reference global state
 2. **Caller provides resources** — no internal allocation; callers pass buffers, function pointers (C), or trait objects (Rust)
@@ -63,8 +76,8 @@ cargo build --workspace --target x86_64-unknown-none
 
 - **Rust**: Edition 2021, toolchain 1.84.0 (pinned in `MODULE.bazel`)
 - **C**: C17 standard (`-std=c17`), compiled with `-ffreestanding -nostdlib`
-- **Bazel**: Uses bzlmod (`MODULE.bazel`) — `WORKSPACE.bazel` is intentionally empty. `rules_cc` 0.2.17, `rules_rust` 0.69.0.
-- **Cargo**: Workspace resolver 2. All crates depend on `genesis-abi` via path dependency.
+- **Bazel**: Uses bzlmod (`MODULE.bazel`) — `WORKSPACE.bazel` is intentionally empty. `rules_cc` 0.2.17, `rules_rust` 0.69.0. `trx-compositor` is not in Bazel.
+- **Cargo**: Workspace resolver 2. All workspace members depend on `genesis-abi` via path dependency.
 
 ### Feature Flags
 
@@ -76,13 +89,15 @@ cargo build --workspace --target x86_64-unknown-none
 ### Crate Dependency Layers
 
 ```
-Layer 0:  genesis-abi (C headers = source of truth, Rust mirror)
+Layer 0:  genesis-abi (C headers = source of truth, Rust mirror, external Zig consumers via submodule)
 Layer 1:  primitives(C) | bitops(C+Rust) | kfmt(C+Rust) | sync(Rust) | arch-intrinsics(Rust)
 Layer 2:  alloc(C+Rust) | collections(Rust) | crypto(Rust)
 Layer 3:  elf(Rust) | devicetree(Rust)
+─────── application layer (TerranoxOS-only) ───────
+Layer 4:  trx-compositor(Rust, alloc)
 ```
 
-Within a layer, crates have no inter-dependencies. Build in any order within a layer.
+Within a layer, crates have no inter-dependencies. Build in any order within a layer. The application layer depends only on `genesis-abi` for syscall numbers and result codes.
 
 ### Key Cross-Crate Dependency
 
@@ -102,12 +117,19 @@ Within a layer, crates have no inter-dependencies. Build in any order within a l
 - **elf**: ELF64 little-endian parser. Header/section/segment parsing, symbol table with `SymbolIter` and `find_symbol_by_name`, RELA relocations with `apply_x86_64_rela` (R_X86_64_64, PC32, 32, 32S, RELATIVE).
 - **devicetree**: FDT parser (big-endian DTB blobs, node traversal by path, `FdtPropertyList` fixed-capacity). ACPI parser (RSDP v1/v2 with checksum, 16-byte aligned scan, MADT with Local APIC / I/O APIC / Interrupt Override / NMI entries).
 
+### Application Layer
+
+- **trx-compositor**: Custom Bevy-style ECS (`World`, `Entity`, `Component`, `Resource`, `App`, `Plugin`, `Schedule`, `EventReader`/`Events`, `Children`/`Parent`) with archetype storage and per-component change-detection ticks. UI components (`Position`, `Size`, `ZIndex`, `Color`, `BackgroundColor`, `BorderColor`/`Width`, `Opacity`, `Visible`, `FlexboxLayout`, `TextContent`, `Window`, `WindowTitle`, `Interaction`/`InteractionState`, `GlobalTransform`). Frame pipeline: `input → layout → damage → render → present` (each a `fn(&mut World)` wrapped via `into_system`; assemble with `build_compositor_systems()`). `layout_system` is a full Flexbox engine over `FlexboxLayout` + `Children` (direction, justify_content, align_items, gap, padding). Three render backends behind one trait: `SoftwareBackend` (CPU `&mut [u32]` ARGB8888), `DrmBackend` (4 buffers, DRM-style), `GpuBackend<P: PlatformBackend>` (8 buffers, lazy compositor handle, wired to `sys_trx_buffer_*`/`sys_trx_compositor_present` via `PlatformBackend`). `PlatformBackend` trait + `MockPlatform` for testing. Scene I/O: TRXS v1 binary format (magic `TRXS`, version `1`, sentinel parent `0xFFFF_FFFF`), 16 component tags 0..15 in `scene::format`, with `serialize`/`deserialize`/`loader`. `#![no_std]` with `extern crate alloc` — uses heap `Vec`/`Box`. Single dependency: `genesis-abi` (path). 218 tests pass.
+
 ## Testing
 
-- **178 Rust tests + 144 C tests = 322 total**, all passing
-- Rust tests run via `cargo test` on host (no QEMU)
+- **399 Rust tests + 144 C tests = 543 total**, all passing
+  - Kernel-lib Rust crates: 181 tests (genesis-abi 50, alloc 7, bitops 25, collections 35, crypto 11, devicetree 11, elf 15, kfmt 15, sync 12; arch-intrinsics has none — pure intrinsics)
+  - trx-compositor: 218 tests
+  - C: 144 tests across primitives, bitops, kfmt, alloc, genesis-abi compile_test
+- Rust tests run via `cargo test --workspace` on host (no QEMU)
 - C tests compile with GCC (`-ffreestanding -nostdlib -std=c17 -Wall -Wextra -Werror -Wpedantic`) and link against object files — see `*/tests/` directories
-- Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree`
+- Miri verified: `genesis-abi`, `sync`, `alloc`, `collections` (4 sub-tests: static_vec, ringbuf, static_hashmap, rbtree), `crypto`, `elf`, `devicetree` (NOT trx-compositor — the heap-allocating ECS isn't in the Miri set)
 - Crypto tests use FIPS 180-4, RFC 4231, IEEE 802.3 standard test vectors
 - `#[cfg(test)] extern crate alloc` pattern used in no_std crates that need `Vec` in tests
 - Feature-gated tests: `cargo test -p genesis-abi --features result-names` (run in CI)
@@ -128,3 +150,8 @@ Eight jobs run on push/PR to `main`:
 | `frama-c` | Frama-C WP verification of ACSL annotations on all C sources (primitives, bitops, kfmt, alloc) |
 
 Run Frama-C locally: `./scripts/frama-c-verify.sh` (full proofs) or `./scripts/frama-c-verify.sh --check-only` (parse annotations only).
+
+**CI gaps to be aware of:**
+
+- `trx-compositor` runs as part of `cargo test --workspace` and `cargo clippy --workspace`, but it's not exercised under Miri. If you add new `unsafe` to it, add a Miri job.
+- The `cross-compile` matrix builds `--workspace` for bare-metal targets, which now includes `trx-compositor`. If trx-compositor ever pulls in a non-portable dep, the matrix will start failing on those targets.

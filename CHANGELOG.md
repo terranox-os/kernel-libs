@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- **trx-ui**: Extracted to its own repository [`terranox-os/trx-ui`](https://github.com/terranox-os/trx-ui). Zig UI toolkit (declarative tree builder, flexbox, software + GPU renderers, TRX syscall wrappers). Full commit history preserved via `git filter-repo`. Per [TRX-DOC-0813](https://github.com/terranox-os/terranox-os/blob/develop-0.5/docs/project/TRX-DOC-0813-repo-ownership-map.md) repo ownership map.
+  - New repo pins genesis-abi via submodule at tag [`genesis-abi-v0.1.0`](https://github.com/terranox-os/kernel-libs/releases/tag/genesis-abi-v0.1.0).
+  - Test count drops from 646 (399 Rust + 144 C + 103 Zig) to 543 (399 Rust + 144 C).
+
+### Added
+
+- **genesis-abi**: First scoped release tag [`genesis-abi-v0.1.0`](https://github.com/terranox-os/kernel-libs/releases/tag/genesis-abi-v0.1.0) so downstream consumers (trx-libc, trx-ui, future terranox-desktop integration) can pin to a stable ABI snapshot rather than tracking `main`.
+
 ## [0.2.0] - 2026-03-29
 
 ### Added
