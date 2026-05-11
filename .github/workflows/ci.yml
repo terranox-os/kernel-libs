@@ -211,7 +211,7 @@ jobs:
 
           echo "Extracting Rust error codes..."
           grep -oP 'ERR_\w+:\s*Self\s*=\s*Self\((-?\d+)\)' \
-            genesis-abi/src/lib.rs | \
+            genesis-abi/src/*.rs | \
             sed 's/: Self = Self(/\t/' | sed 's/)//' | \
             sort > /tmp/rs_errors.txt
 
@@ -242,7 +242,7 @@ jobs:
 
           echo "Extracting Rust syscall numbers..."
           grep -oP 'SYS_\w+:\s*GenSyscallNr\s*=\s*GenSyscallNr\((0x[0-9a-fA-F]+)\)' \
-            genesis-abi/src/lib.rs | \
+            genesis-abi/src/*.rs | \
             sed 's/: GenSyscallNr = GenSyscallNr(/\t/' | sed 's/)//' | \
             sort > /tmp/rs_syscalls.txt
 
@@ -261,12 +261,18 @@ jobs:
           grep -cP 'GEN_CAP_\w+\s+\(\(GenCapability\)' \
             genesis-abi/include/genesis_module.h > /tmp/c_cap_count.txt
 
-          echo "Extracting Rust capability bits..."
-          grep -cP 'pub const [A-Z_]+: Self = Self\(' \
-            genesis-abi/src/lib.rs | head -1 > /tmp/rs_cap_count.txt
+          # Count Rust `Self = Self(...)` consts across all genesis-abi
+          # source files (these consts now live in result.rs/module.rs
+          # after the lib.rs split).
+          grep -hP 'pub const [A-Z_]+: Self = Self\(' \
+            genesis-abi/src/*.rs | wc -l > /tmp/rs_cap_count.txt
 
           echo "C capabilities: $(cat /tmp/c_cap_count.txt)"
-          echo "Rust capability consts present: yes"
+          echo "Rust Self-consts (caps + errors + OK + ALL): $(cat /tmp/rs_cap_count.txt)"
+          if [ "$(cat /tmp/rs_cap_count.txt)" -eq 0 ]; then
+            echo "ERROR: No Rust Self-consts found — split may have broken extraction"
+            exit 1
+          fi
           echo "Drift check passed (structural)."
 
       - name: Check struct sizes match (compile-time)
@@ -363,9 +369,11 @@ jobs:
 
           # Files defining the ABI surface that downstream consumers pin via tag.
           # Excludes tests/, README, examples — only the contract itself.
+          # `genesis-abi/src/` covers lib.rs and the result/syscall/module/trx
+          # submodules added when lib.rs was split.
           changed=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- \
             'genesis-abi/include/' \
-            'genesis-abi/src/lib.rs' \
+            'genesis-abi/src/' \
             'genesis-abi/Cargo.toml' || true)
 
           if [ -z "$changed" ]; then
