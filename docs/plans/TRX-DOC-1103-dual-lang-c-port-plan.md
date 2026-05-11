@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Plan: Port Rust-only crates to dual-language (C + Rust)
 
 > **Status: COMPLETED.** Implemented in PR #26 (merged 2026-03-29). See CHANGELOG.md v0.2.0.

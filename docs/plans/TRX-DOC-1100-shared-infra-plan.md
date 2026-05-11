@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # TerranoxOS Shared Infrastructure — Migration Plan
 
 *March 2026 — Repo structure, crate scaffolding, and migration strategy*
@@ -6,7 +10,7 @@
 
 ## Context
 
-The TerranoxOS ecosystem has 4 OS projects sharing code through kernel-libs (currently a monorepo). This plan defines the hybrid multi-repo structure (Option C from shared-infra-ref.md) and the initial scaffolding for the shared Rust crates.
+The TerranoxOS ecosystem has 4 OS projects sharing code through kernel-libs (currently a monorepo). This plan defines the hybrid multi-repo structure (Option C from ../spec/TRX-DOC-1001-shared-infra-reference.md) and the initial scaffolding for the shared Rust crates.
 
 **Approach**: Gradual migration. kernel-libs stays as-is. New shared Rust crates live in a new `terranox-crates` repo. Each OS project includes shared repos via git submodules.
 
@@ -34,7 +38,7 @@ terranox-os/ (GitHub org)
 │   └── Derivations: 300+ Nickel package definitions
 │
 ├── trx-libc                 PLANNED — native POSIX libc in Zig
-│   (from terranoxos-libc-plan.md)
+│   (from TRX-DOC-1101-libc-plan.md)
 │
 ├── trx-musl                 PLANNED — musl libc fork (Linux compat layer)
 │
@@ -225,7 +229,7 @@ sigilvm/
 
 ### trx-cap — must use TrxCapSet (128-bit), not CapSet (u32)
 
-The shared-infra-ref.md defines `CapSet = u32` with 10 capabilities. This is **outdated**. PR #13 introduced `TrxCapSet` (128-bit, 12 domains, 40 leaf capabilities). trx-cap must mirror this:
+The ../spec/TRX-DOC-1001-shared-infra-reference.md defines `CapSet = u32` with 10 capabilities. This is **outdated**. PR #13 introduced `TrxCapSet` (128-bit, 12 domains, 40 leaf capabilities). trx-cap must mirror this:
 
 ```rust
 // trx-cap uses the 128-bit hierarchical model from genesis_module.h
@@ -241,7 +245,7 @@ pub const GPU_COMPUTE: TrxCapSet = TrxCapSet { lo: 0, hi: 1 << 1 };
 // ... etc
 ```
 
-NOT: `pub type CapSet = u32;` (shared-infra-ref.md is stale here)
+NOT: `pub type CapSet = u32;` (../spec/TRX-DOC-1001-shared-infra-reference.md is stale here)
 
 ### trx-abi — 119 syscalls, not 91
 
@@ -496,7 +500,7 @@ terranox-tools depends on terranox-crates (world-core uses trx-store, trx-sigil)
 
 ---
 
-## 6. Differences from shared-infra-ref.md
+## 6. Differences from ../spec/TRX-DOC-1001-shared-infra-reference.md
 
 The reference document was written before several decisions. Key corrections:
 
@@ -508,7 +512,7 @@ The reference document was written before several decisions. Key corrections:
 | gcc build commands | clang/LLVM only — no gcc in the stack |
 | Makefile for kernel-libs | Bazel (bzlmod) is primary; Makefile removed |
 | `CapSet = u32` (32-bit) | `TrxCapSet` (128-bit, 12 domains, 40 leaves) from PR #13 |
-| Linux-compatible syscall numbers | TerranoxOS-specific 91-syscall ABI (terranoxos-syscall-ref.md) |
+| Linux-compatible syscall numbers | TerranoxOS-specific 91-syscall ABI (../spec/TRX-DOC-1000-syscall-abi-reference.md) |
 
 ---
 

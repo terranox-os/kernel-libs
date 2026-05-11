@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # TerranoxOS Custom POSIX C Library (trx-libc)
 
 *March 2026 — Design plan for a from-scratch POSIX.1-2017 C library*
@@ -16,7 +20,7 @@ TerranoxOS is not Linux-compatible. It has 82 TerranoxOS-specific syscalls acros
 **Scope**: ~170 files, ~17,000 LOC, 7 phases over ~16 weeks
 **Location**: Initially in kernel-libs monorepo as `libc/`, migrates to `terranox-os/trx-libc` during the shared infra repo split
 
-**Technical reference**: See [terranoxos-zig-libc-reference.md](terranoxos-zig-libc-reference.md) for detailed Zig code examples, inline assembly patterns, Bazel integration, and comptime table generation.
+**Technical reference**: See [../spec/TRX-DOC-1002-zig-libc-reference.md](../spec/TRX-DOC-1002-zig-libc-reference.md) for detailed Zig code examples, inline assembly patterns, Bazel integration, and comptime table generation.
 
 ---
 
