@@ -5,3 +5,6 @@ MODULE.bazel.lock
 # Zig build artifacts
 .zig-cache/
 zig-out/
+
+# Per-conversation working state (Claude Code planning files etc.)
+/tasks/
