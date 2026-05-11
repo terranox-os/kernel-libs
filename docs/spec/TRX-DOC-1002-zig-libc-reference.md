@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Zig for trx-libc: Technical Reference
 
 *March 2026 — Detailed reference for implementing TerranoxOS POSIX libc in Zig*
@@ -232,7 +236,7 @@ pub fn syscall6(number: SyscallNr, arg1: usize, arg2: usize, arg3: usize,
 }
 ```
 
-### Register mapping (from terranoxos-syscall-ref.md Part II)
+### Register mapping (from TRX-DOC-1000-syscall-abi-reference.md Part II)
 
 | Register | SYSCALL purpose | Notes |
 |----------|----------------|-------|
@@ -248,7 +252,7 @@ pub fn syscall6(number: SyscallNr, arg1: usize, arg2: usize, arg3: usize,
 
 ### Errno translation
 
-The kernel returns -errno in rax (per terranoxos-syscall-ref.md line 158-162). The libc translation is trivial:
+The kernel returns -errno in rax (per TRX-DOC-1000-syscall-abi-reference.md line 158-162). The libc translation is trivial:
 
 ```zig
 // src/internal/errno.zig

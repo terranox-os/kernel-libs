@@ -1,14 +1,18 @@
+<!--
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Reconciliation plan: TerranoxOS syscall reference vs. kernel-libs
 
 > **Status: COMPLETED.** Implemented in PR #13 (merged 2026-03-29). See CHANGELOG.md v0.2.0.
 
-*March 2026 — Generated from gap analysis of `terranoxos-syscall-ref.md` against `genesis-abi`*
+*March 2026 — Generated from gap analysis of `../spec/TRX-DOC-1000-syscall-abi-reference.md` against `genesis-abi`*
 
 ---
 
 ## Context
 
-The new `terranoxos-syscall-ref.md` document defines 82 TerranoxOS-specific syscalls across 12 subsystem blocks (plus 4 legacy sigil/sandbox), a hierarchical capability model, POSIX errno mappings, and 10 new data structures. The existing `genesis-abi` crate has 45 syscalls (23 shared + 8 TerranoxOS + 7 RT + 7 Hermetica), a flat 16-bit capability bitmask, and no errno translation. Final total after reconciliation: 119 syscalls (23 shared + 82 TRX + 7 RT + 7 Hermetica).
+The new `../spec/TRX-DOC-1000-syscall-abi-reference.md` document defines 82 TerranoxOS-specific syscalls across 12 subsystem blocks (plus 4 legacy sigil/sandbox), a hierarchical capability model, POSIX errno mappings, and 10 new data structures. The existing `genesis-abi` crate has 45 syscalls (23 shared + 8 TerranoxOS + 7 RT + 7 Hermetica), a flat 16-bit capability bitmask, and no errno translation. Final total after reconciliation: 119 syscalls (23 shared + 82 TRX + 7 RT + 7 Hermetica).
 
 This plan implements the full reconciliation in kernel-libs as a working prototype, ahead of the planned shared infrastructure repo split (`trx-abi`, `trx-cap`, `trx-idl`, etc.).
 

@@ -13,7 +13,7 @@ kernel-libs is a shared library repository of freestanding, zero-dependency crat
 >
 > kernel-libs is now back to its charter: freestanding zero-dependency shared libraries only. Per [TRX-DOC-0813 repo ownership map](https://github.com/terranox-os/terranox-os/blob/develop-0.5/docs/project/TRX-DOC-0813-repo-ownership-map.md).
 
-Authoritative specifications: `terranoxos-syscall-ref.md` (syscall ABI), `terranoxos-shared-infra-plan.md` (repo structure), `terranoxos-libc-plan.md` (Zig POSIX libc).
+Authoritative specifications: [`docs/spec/TRX-DOC-1000-syscall-abi-reference.md`](docs/spec/TRX-DOC-1000-syscall-abi-reference.md) (syscall ABI), [`docs/plans/TRX-DOC-1100-shared-infra-plan.md`](docs/plans/TRX-DOC-1100-shared-infra-plan.md) (repo structure), [`docs/plans/TRX-DOC-1101-libc-plan.md`](docs/plans/TRX-DOC-1101-libc-plan.md) (Zig POSIX libc). Full doc index: [`docs/spec/`](docs/spec/) (ABI references) and [`docs/plans/`](docs/plans/) (planning docs).
 
 ## Build & Test Commands
 
