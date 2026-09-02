@@ -240,6 +240,11 @@ mod tests {
 
         assert!(syscall::SYS_TRX_PROCESS_CAP_GRANT.is_terranox());
         assert!(!syscall::SYS_TRX_PROCESS_CAP_GRANT.is_shared());
+        assert_eq!(syscall::SYS_TRX_PROCESS_CREATE_USER.0, 0x1100);
+        assert_eq!(
+            syscall::terranox_user(syscall::SYS_TRX_PROCESS_CAP_GRANT).0,
+            0x1105
+        );
 
         assert!(syscall::SYS_RT_TASK_CREATE.is_genesisrt());
         assert!(!syscall::SYS_RT_TASK_CREATE.is_terranox());

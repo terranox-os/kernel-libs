@@ -33,6 +33,10 @@ _Static_assert(GEN_SYSCALL_SHARED_BASE == 0x0000, "Shared base");
 _Static_assert(GEN_SYSCALL_TERRANOX_BASE == 0x0100, "Terranox base");
 _Static_assert(GEN_SYSCALL_GENESISRT_BASE == 0x0200, "GenesisRT base");
 _Static_assert(GEN_SYSCALL_HERMETICA_BASE == 0x0300, "Hermetica base");
+_Static_assert(GEN_SYSCALL_TERRANOX_USER_OFFSET == 0x1000,
+               "Terranox userspace offset");
+_Static_assert(GEN_SYS_TRX_PROCESS_CREATE_USER == 0x1100,
+               "Terranox process-create userspace label");
 
 /* Module magic */
 _Static_assert(GEN_MODULE_MAGIC == 0x47454E4DU, "Module magic must be GENM");

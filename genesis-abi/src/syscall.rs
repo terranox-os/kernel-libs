@@ -14,6 +14,15 @@ pub const TERRANOX_BASE: GenSyscallNr = GenSyscallNr(0x0100);
 pub const GENESISRT_BASE: GenSyscallNr = GenSyscallNr(0x0200);
 pub const HERMETICA_BASE: GenSyscallNr = GenSyscallNr(0x0300);
 
+/// Offset used to transport TerranoxOS syscall labels through the native
+/// userspace syscall number space without colliding with Linux numbers.
+pub const TERRANOX_USER_OFFSET: GenSyscallNr = GenSyscallNr(0x1000);
+
+#[inline]
+pub const fn terranox_user(nr: GenSyscallNr) -> GenSyscallNr {
+    GenSyscallNr(nr.0 + TERRANOX_USER_OFFSET.0)
+}
+
 // Range limits (exclusive)
 pub const SHARED_LIMIT: GenSyscallNr = GenSyscallNr(0x0100);
 pub const TERRANOX_LIMIT: GenSyscallNr = GenSyscallNr(0x0200);
@@ -49,6 +58,7 @@ pub const SYS_POLL: GenSyscallNr = GenSyscallNr(0x0016);
 
 // Subsystem 0: Process management (0x0100–0x010F)
 pub const SYS_TRX_PROCESS_CREATE: GenSyscallNr = GenSyscallNr(0x0100);
+pub const SYS_TRX_PROCESS_CREATE_USER: GenSyscallNr = terranox_user(SYS_TRX_PROCESS_CREATE);
 pub const SYS_TRX_PROCESS_KILL: GenSyscallNr = GenSyscallNr(0x0103);
 pub const SYS_TRX_PROCESS_INFO: GenSyscallNr = GenSyscallNr(0x0104);
 pub const SYS_TRX_PROCESS_CAP_GRANT: GenSyscallNr = GenSyscallNr(0x0105);

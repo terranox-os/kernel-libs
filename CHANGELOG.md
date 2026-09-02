@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **genesis-abi**: document the native `0x1000` TerranoxOS syscall transport
+  offset and expose matching C/Rust helpers, including the process-create
+  userspace label (`0x1100`)
 - **kernel-libs charter restored**: Repo is now back to its original purpose — freestanding zero-dependency shared libraries for TerranoxOS, GenesisOS-RT, and HermeticaOS only. The application-layer projects (trx-compositor, trx-ui) that had accumulated in this repo have been moved to repos that match their language and consumer model.
 - **genesis-abi**: Internal split of the 1690-line `src/lib.rs` into 4 modules matching the C header structure — `result.rs` ↔ `genesis_result.h`, `syscall.rs` ↔ `genesis_syscall.h`, `module.rs` ↔ `genesis_module.h`, `trx.rs` ↔ `genesis_trx_types.h`. **No ABI change**: `lib.rs` re-exports the same items at the crate root, so `genesis_abi::GenResult`, `genesis_abi::syscall::SYS_EXIT`, `genesis_abi::posix_errno::EINVAL`, and `genesis_abi::trx_cap::PROCESS` all resolve unchanged. Pure code reorganization — same 50 tests, same struct layouts, same `#[repr(C)]`/`#[repr(transparent)]`. CI's `abi-drift-check` updated to scan `genesis-abi/src/*.rs` instead of just `lib.rs`. Bazel `genesis_abi_rs` target switched to a `glob(["src/**/*.rs"])` srcs list with `crate_root = "src/lib.rs"`.
 

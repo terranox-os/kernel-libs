@@ -243,7 +243,7 @@ cap::root
 
 | Nr | Name | Capability | Arguments | Return | Description |
 |----|------|-----------|-----------|--------|-------------|
-| 0 | `trx_process_create` | `cap::process::create` | `path: *const u8, argv: *const *const u8, caps: cap_set_t` | `pid: i64` | Create a new process from an ELF binary. The new process inherits only the capabilities in `caps` (no ambient authority). |
+| 0 | `trx_process_create` | `cap::process::create` | `path: *const u8, argv: *const *const u8, caps: TrxCapSet` | `pid: i64` | Create a new process from an ELF binary. The new process inherits only the capabilities in `caps` (no ambient authority). On x86_64, `caps.lo` and `caps.hi` occupy the third and fourth syscall argument registers. |
 | 1 | `trx_process_exit` | *(implicit)* | `status: i32` | *(does not return)* | Terminate the calling process. Cleanup handlers run in reverse order. |
 | 2 | `trx_process_wait` | `cap::process::manage` | `pid: i64, status: *mut i32, flags: u32` | `pid: i64` | Wait for a child process to change state. |
 | 3 | `trx_process_kill` | `cap::process::signal` | `pid: i64, signal: i32` | `0 / -errno` | Send a signal to a process. Requires capability over the target. |
@@ -462,6 +462,12 @@ typedef struct {
     uint64_t id;          // unique capability ID in the kernel DAG
     uint64_t rights;      // bitmask of rights (read, write, grant, revoke)
 } cap_t;
+
+// Canonical process capability set (128-bit, defined in genesis_module.h)
+typedef struct {
+    uint64_t lo;
+    uint64_t hi;
+} TrxCapSet;
 
 // Capability set (variable-length bitmap)
 typedef struct {

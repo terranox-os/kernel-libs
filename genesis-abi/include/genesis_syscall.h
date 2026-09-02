@@ -71,10 +71,24 @@ typedef uint32_t GenSyscallNr;
  * exec, wait, mmap, munmap, brk, ioctl, dup2, pipe, fork, fcntl,
  * poll, getpid) are NOT duplicated here — use the GEN_SYS_* shared
  * constants at 0x0000.
+ *
+ * On x86_64, native userspace transports these labels through the
+ * collision-free 0x1100–0x11FF window. The kernel subtracts this offset
+ * before dispatching, leaving the canonical 0x0100–0x01FF values as the
+ * internal labels.
  */
+#define GEN_SYSCALL_TERRANOX_USER_OFFSET ((GenSyscallNr)0x1000)
+#define GEN_SYSCALL_TERRANOX_USER(nr) \
+    ((GenSyscallNr)((GenSyscallNr)(nr) + GEN_SYSCALL_TERRANOX_USER_OFFSET))
 
 /* Subsystem 0: Process management (0x0100–0x010F) */
+/*
+ * trx_process_create register ABI: arg0=path, arg1=argv,
+ * arg2=TrxCapSet.lo, arg3=TrxCapSet.hi; returns the child PID or GenResult.
+ */
 #define GEN_SYS_TRX_PROCESS_CREATE     ((GenSyscallNr)0x0100)
+#define GEN_SYS_TRX_PROCESS_CREATE_USER \
+    GEN_SYSCALL_TERRANOX_USER(GEN_SYS_TRX_PROCESS_CREATE)
 /* 0x0101 reserved — process_exit uses shared GEN_SYS_EXIT (0x0000) */
 /* 0x0102 reserved — process_wait uses shared GEN_SYS_WAIT (0x0014) */
 #define GEN_SYS_TRX_PROCESS_KILL       ((GenSyscallNr)0x0103)
